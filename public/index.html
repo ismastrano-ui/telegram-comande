@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comande Pizzeria</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>🍕 Comande</h1>
+
+    <section class="card">
+      <label>Tavolo</label>
+      <input id="tableNumber" type="number" placeholder="Es. 5" />
+    </section>
+
+    <section class="categories">
+      <button>Pizze</button>
+      <button>Bevande</button>
+      <button>Antipasti</button>
+      <button>Dolci</button>
+    </section>
+
+    <section class="card">
+      <h2>Menu</h2>
+      <div id="menu"></div>
+    </section>
+
+    <section class="card">
+      <h2>Carrello</h2>
+      <div id="cart">Nessun prodotto inserito</div>
+      <textarea id="notes" placeholder="Note per cucina/cassa"></textarea>
+      <button id="sendOrder">Invia ordine</button>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

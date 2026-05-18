@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+.app {
+  max-width: 480px;
+  margin: auto;
+  padding: 16px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  font-size: 18px;
+  box-sizing: border-box;
+}
+
+.categories {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  background: #222;
+  color: white;
+  font-weight: bold;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eee;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+#sendOrder {
+  background: #1f8f3a;
+}
