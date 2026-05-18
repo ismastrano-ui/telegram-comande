@@ -17,8 +17,9 @@ app.use(express.static("public"));
 
 app.post("/send-order", async (req, res) => {
   try {
-
-    const { table, notes, cart, total } = req.body;
+  orderType === "add"
+    ? "➕ AGGIUNTA TAVOLO"
+    : "🍕 NUOVA COMANDA";
 
     const itemsText = cart
       .map(item =>
