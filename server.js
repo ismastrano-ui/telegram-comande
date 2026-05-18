@@ -28,8 +28,7 @@ app.post("/send-order", async (req, res) => {
       .join("\n");
 
     const pizzeriaMessage = `
-🍕 NUOVA COMANDA
-
+${title}
 Tavolo: ${table}
 
 ${itemsText}
@@ -39,8 +38,7 @@ ${notes || "Nessuna nota"}
 `;
 
     const cassaMessage = `
-💰 NUOVO ORDINE
-
+${title}
 Tavolo: ${table}
 
 ${itemsText}
