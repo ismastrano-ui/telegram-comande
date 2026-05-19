@@ -160,7 +160,8 @@ const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
 const closedTablesDiv = document.getElementById("closedTables");
-
+const smartBarInfo =
+  document.getElementById("smartBarInfo");
 function showMainApp() {
   loginScreen.style.display = "none";
   mainApp.style.display = "block";
@@ -353,6 +354,20 @@ function removeItem(index) {
 
 function renderCart() {
   if (cart.length === 0) {
+    const table =
+  document.getElementById("tableNumber").value || "-";
+
+const totalItems =
+  cart.reduce((sum, item) =>
+    sum + item.quantity,
+  0);
+
+smartBarInfo.innerHTML = `
+  🪑 Tavolo ${table}
+  <br>
+  🛒 ${totalItems} articoli
+  | €${total.toFixed(2)}
+`;
     cartDiv.innerHTML = "Nessun prodotto inserito";
     return;
   }
