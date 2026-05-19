@@ -160,8 +160,8 @@ const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
 const closedTablesDiv = document.getElementById("closedTables");
-const smartBarInfo =
-  document.getElementById("smartBarInfo");
+const smartBarInfo = document.getElementById("smartBarInfo");
+
 function showMainApp() {
   loginScreen.style.display = "none";
   mainApp.style.display = "block";
@@ -352,32 +352,31 @@ function removeItem(index) {
   renderCart();
 }
 
+function updateSmartBar(total = 0, totalItems = 0) {
+  const table = document.getElementById("tableNumber").value || "-";
+  const mode = orderType === "add" ? "Aggiunta" : "Nuova";
+
+  smartBarInfo.innerHTML = `
+    🪑 Tavolo ${table} · ${mode}<br>
+    🛒 ${totalItems} articoli | €${total.toFixed(2)}
+  `;
+}
+
 function renderCart() {
   if (cart.length === 0) {
-    const table =
-  document.getElementById("tableNumber").value || "-";
-
-const totalItems =
-  cart.reduce((sum, item) =>
-    sum + item.quantity,
-  0);
-
-smartBarInfo.innerHTML = `
-  🪑 Tavolo ${table}
-  <br>
-  🛒 ${totalItems} articoli
-  | €${total.toFixed(2)}
-`;
     cartDiv.innerHTML = "Nessun prodotto inserito";
+    updateSmartBar(0, 0);
     return;
   }
 
   let total = 0;
+  let totalItems = 0;
   cartDiv.innerHTML = "";
 
   cart.forEach((item, index) => {
     const lineTotal = item.price * item.quantity;
     total += lineTotal;
+    totalItems += item.quantity;
 
     const modificationText = item.modification
       ? `<br><em>✏️ ${item.modification}</em>`
@@ -403,6 +402,7 @@ smartBarInfo.innerHTML = `
   });
 
   cartDiv.innerHTML += `<hr><strong>Totale: €${total.toFixed(2)}</strong>`;
+  updateSmartBar(total, totalItems);
 }
 
 async function renderTableMap() {
@@ -447,6 +447,8 @@ async function renderTableMap() {
         newOrderBtn.classList.add("active");
         addOrderBtn.classList.remove("active");
       }
+
+      renderCart();
     };
 
     tableMapDiv.appendChild(button);
@@ -557,9 +559,10 @@ function selectTable(tableNumber) {
   document.getElementById("tableNumber").value = tableNumber;
 
   orderType = "add";
-
   addOrderBtn.classList.add("active");
   newOrderBtn.classList.remove("active");
+
+  renderCart();
 }
 
 function buildTableSummary(tableNumber, table) {
@@ -673,12 +676,18 @@ newOrderBtn.addEventListener("click", () => {
   orderType = "new";
   newOrderBtn.classList.add("active");
   addOrderBtn.classList.remove("active");
+  renderCart();
 });
 
 addOrderBtn.addEventListener("click", () => {
   orderType = "add";
   addOrderBtn.classList.add("active");
   newOrderBtn.classList.remove("active");
+  renderCart();
+});
+
+document.getElementById("tableNumber").addEventListener("input", () => {
+  renderCart();
 });
 
 document.getElementById("sendOrder").addEventListener("click", async () => {
