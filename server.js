@@ -23,7 +23,14 @@ app.post("/send-order", async (req, res) => {
         : "🍕 NUOVA COMANDA";
 
     const itemsText = cart
-      .map(item => `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`)
+      .map(item => {
+        const baseLine = `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`;
+        const modificationLine = item.modification
+          ? `\n   Modifica: ${item.modification}`
+          : "";
+
+        return baseLine + modificationLine;
+      })
       .join("\n");
 
     const pizzeriaMessage = `
