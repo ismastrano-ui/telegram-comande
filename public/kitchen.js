@@ -1,4 +1,9 @@
 const kitchenOrdersDiv = document.getElementById("kitchenOrders");
+const enableSoundButton = document.getElementById("enableSoundButton");
+
+let soundEnabled = false;
+let knownOrderKeys = new Set();
+let firstLoad = true;
 
 const kitchenCategories = [
   "Stuzzicherie",
@@ -9,6 +14,33 @@ const kitchenCategories = [
   "Meneghine",
   "Dolci"
 ];
+
+enableSoundButton.addEventListener("click", () => {
+  soundEnabled = true;
+  playNotificationSound();
+  alert("Notifiche cucina attivate 🔔");
+});
+
+function playNotificationSound() {
+  if (!soundEnabled) return;
+
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  oscillator.frequency.value = 880;
+  gainNode.gain.value = 0.15;
+
+  oscillator.start();
+
+  setTimeout(() => {
+    oscillator.stop();
+    audioContext.close();
+  }, 250);
+}
 
 function isKitchenItem(item) {
   if (kitchenCategories.includes(item.category)) {
@@ -97,6 +129,31 @@ function renderKitchenOrders(tables) {
   }
 }
 
+function checkNewOrders(tables) {
+  const currentKeys = new Set();
+
+  tables.forEach(table => {
+    const orders = table.orders || [];
+
+    orders.forEach((order, orderIndex) => {
+      if (order.kitchenDone) return;
+
+      const kitchenItems = (order.items || []).filter(isKitchenItem);
+      if (kitchenItems.length === 0) return;
+
+      const key = `${table.id}-${orderIndex}-${order.createdAt}`;
+      currentKeys.add(key);
+
+      if (!firstLoad && !knownOrderKeys.has(key)) {
+        playNotificationSound();
+      }
+    });
+  });
+
+  knownOrderKeys = currentKeys;
+  firstLoad = false;
+}
+
 async function markKitchenDone(tableId, orderIndex) {
   const confirmDone = confirm("Segnare questa comanda come evasa?");
 
@@ -145,6 +202,7 @@ function loadKitchenOrders() {
         return new Date(a.openedAt || 0) - new Date(b.openedAt || 0);
       });
 
+      checkNewOrders(tables);
       renderKitchenOrders(tables);
     });
 }
