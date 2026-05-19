@@ -23,99 +23,200 @@ const kitchenCategories = [
   "Dolci"
 ];
 
-function formatItems(items) {
+function groupKitchenItems(items) {
+
+  const grouped = {};
+
+  items.forEach(item => {
+
+    const key =
+      `${item.name}_${item.modification || ""}`;
+
+    if (!grouped[key]) {
+
+      grouped[key] = {
+        name: item.name,
+        quantity: 0,
+        modification: item.modification || ""
+      };
+    }
+
+    grouped[key].quantity += item.quantity;
+  });
+
+  return Object.values(grouped);
+}
+
+function formatKitchenItems(items) {
+
   return items
     .map(item => {
-      const baseLine = `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`;
-      const modificationLine = item.modification
-        ? `\n   Modifica: ${item.modification}`
-        : "";
 
-      return baseLine + modificationLine;
+      let text =
+        `${item.quantity} x ${item.name}`;
+
+      if (item.modification) {
+
+        text += `\n✏️ ${item.modification}`;
+      }
+
+      return text;
+    })
+    .join("\n\n");
+}
+
+function formatFullItems(items) {
+
+  return items
+    .map(item => {
+
+      let text =
+        `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`;
+
+      if (item.modification) {
+
+        text += `\n   ✏️ ${item.modification}`;
+      }
+
+      return text;
     })
     .join("\n");
 }
 
 app.post("/send-order", async (req, res) => {
+
   try {
-    const { table, notes, cart, total, orderType } = req.body;
+
+    const {
+      table,
+      notes,
+      cart,
+      total,
+      orderType
+    } = req.body;
 
     const title =
       orderType === "add"
         ? "➕ AGGIUNTA TAVOLO"
         : "🍕 NUOVA COMANDA";
 
-    const kitchenItems = cart.filter(item =>
-      kitchenCategories.includes(item.category)
-    );
+    const kitchenItems =
+      cart.filter(item =>
+        kitchenCategories.includes(item.category)
+      );
 
-    const kitchenText = kitchenItems.length > 0
-      ? formatItems(kitchenItems)
-      : "Nessun prodotto per pizzeria/cucina";
+    const groupedKitchenItems =
+      groupKitchenItems(kitchenItems);
 
-    const fullText = formatItems(cart);
+    const kitchenText =
+      groupedKitchenItems.length > 0
+        ? formatKitchenItems(groupedKitchenItems)
+        : "Nessun prodotto cucina";
+
+    const fullText =
+      formatFullItems(cart);
 
     const pizzeriaMessage = `
 ${title}
 
-Tavolo: ${table}
+🍽️ Tavolo ${table}
 
 ${kitchenText}
 
-Note:
-${notes || "Nessuna nota"}
+${notes
+  ? `📝 Note:\n${notes}`
+  : ""}
 `;
 
     const cassaMessage = `
 ${title}
 
-Tavolo: ${table}
+🍽️ Tavolo ${table}
 
 ${fullText}
 
-Totale: €${total.toFixed(2)}
+💰 Totale: €${total.toFixed(2)}
 
-Note:
-${notes || "Nessuna nota"}
+${notes
+  ? `📝 Note:\n${notes}`
+  : ""}
 `;
 
-    if (kitchenItems.length > 0) {
-      await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
+    if (groupedKitchenItems.length > 0) {
+
+      await bot.sendMessage(
+        process.env.PIZZERIA_CHAT_ID,
+        pizzeriaMessage
+      );
     }
 
-    await bot.sendMessage(process.env.CASSA_CHAT_ID, cassaMessage);
+    await bot.sendMessage(
+      process.env.CASSA_CHAT_ID,
+      cassaMessage
+    );
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
 
   } catch (error) {
-    console.error("Errore invio ordine:", error.response?.body || error.message);
-    res.status(500).json({ success: false });
+
+    console.error(
+      "Errore invio ordine:",
+      error.response?.body || error.message
+    );
+
+    res.status(500).json({
+      success: false
+    });
   }
 });
 
 app.post("/close-table", async (req, res) => {
+
   try {
-    const { table, total, summary } = req.body;
+
+    const {
+      table,
+      total,
+      summary
+    } = req.body;
 
     const closeMessage = `
 💰 TAVOLO CHIUSO
 
-Tavolo: ${table}
-Totale finale: €${Number(total).toFixed(2)}
+🍽️ Tavolo ${table}
+
+💵 Totale finale: €${Number(total).toFixed(2)}
 
 ${summary}
 `;
 
-    await bot.sendMessage(process.env.CASSA_CHAT_ID, closeMessage);
+    await bot.sendMessage(
+      process.env.CASSA_CHAT_ID,
+      closeMessage
+    );
 
-    res.json({ success: true });
+    res.json({
+      success: true
+    });
 
   } catch (error) {
-    console.error("Errore chiusura tavolo:", error.response?.body || error.message);
-    res.status(500).json({ success: false });
+
+    console.error(
+      "Errore chiusura tavolo:",
+      error.response?.body || error.message
+    );
+
+    res.status(500).json({
+      success: false
+    });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server avviato sulla porta ${PORT}`);
+
+  console.log(
+    `Server avviato sulla porta ${PORT}`
+  );
 });
