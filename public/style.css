@@ -8,52 +8,48 @@ body {
 .app {
   max-width: 520px;
   margin: auto;
-  padding: 14px;
+  padding: 12px;
 }
 
 h1 {
   text-align: center;
   color: white;
-  margin-bottom: 16px;
+  margin: 10px 0 14px;
 }
 
 h2 {
   margin-top: 0;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .card {
-  background: #ffffff;
-  padding: 16px;
-  margin-bottom: 14px;
+  background: white;
+  padding: 14px;
+  margin-bottom: 12px;
   border-radius: 18px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-}
-
-label {
-  font-weight: bold;
 }
 
 input,
 textarea {
   width: 100%;
-  padding: 14px;
+  padding: 13px;
   margin-top: 8px;
-  font-size: 18px;
+  font-size: 17px;
   box-sizing: border-box;
   border: 2px solid #ddd;
   border-radius: 12px;
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 70px;
 }
 
 button {
   border: none;
   border-radius: 12px;
-  padding: 12px;
-  font-size: 16px;
+  padding: 11px 12px;
+  font-size: 15px;
   font-weight: bold;
   background: #222;
   color: white;
@@ -64,16 +60,21 @@ button:active {
 }
 
 .categories {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  background: #111;
+  padding: 8px 0;
 }
 
 .categories button {
   background: #333;
-  font-size: 15px;
-  padding: 12px 8px;
+  font-size: 14px;
+  padding: 10px 6px;
 }
 
 .order-type {
@@ -96,15 +97,15 @@ button:active {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  background: #f2f2f2;
-  padding: 12px;
+  background: #f3f3f3;
+  padding: 11px;
   border-radius: 14px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 }
 
 .menu-item span {
   flex: 1;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .menu-item small {
@@ -112,18 +113,9 @@ button:active {
 }
 
 .menu-item button {
-  width: auto;
-  min-width: 48px;
-  padding: 10px 12px;
+  min-width: 46px;
+  padding: 9px 10px;
   font-size: 14px;
-}
-
-#sendOrder {
-  width: 100%;
-  background: #1f8f3a;
-  font-size: 20px;
-  margin-top: 12px;
-  padding: 16px;
 }
 
 #cart .menu-item {
@@ -136,8 +128,22 @@ button:active {
   border: 1px solid #ffb3b3;
 }
 
+#closedTables .menu-item {
+  background: #eef7ee;
+  border: 1px solid #b7e0b7;
+}
+
+#sendOrder,
+#loginButton {
+  width: 100%;
+  background: #1f8f3a;
+  font-size: 19px;
+  margin-top: 12px;
+  padding: 15px;
+}
+
 #searchInput {
-  font-size: 18px;
+  font-size: 17px;
 }
 
 em {
@@ -148,8 +154,9 @@ em {
 hr {
   border: none;
   border-top: 1px solid #ddd;
-  margin: 12px 0;
+  margin: 10px 0;
 }
+
 .legend {
   font-size: 14px;
   margin-bottom: 10px;
@@ -159,14 +166,20 @@ hr {
 .table-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  gap: 7px;
 }
 
 .table-button {
-  padding: 14px 6px;
+  padding: 12px 4px;
   border-radius: 14px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
+  min-height: 54px;
+}
+
+.table-button small {
+  font-size: 11px;
+  font-weight: normal;
 }
 
 .table-free {
@@ -175,4 +188,36 @@ hr {
 
 .table-open {
   background: #b91c1c;
+}
+
+#loggedUser .card {
+  background: #e8f5ee;
+  border: 1px solid #a9d8b8;
+}
+
+@media (max-width: 420px) {
+  .app {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .menu-item {
+    padding: 10px;
+  }
+
+  button {
+    font-size: 14px;
+  }
+
+  .table-grid {
+    gap: 6px;
+  }
 }
