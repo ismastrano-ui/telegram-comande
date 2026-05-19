@@ -146,6 +146,7 @@ const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const dailyStatsDiv = document.getElementById("dailyStats");
 const tableMapDiv = document.getElementById("tableMap");
+const closedTablesDiv = document.getElementById("closedTables");
 
 function renderCategories() {
   categoriesDiv.innerHTML = "";
@@ -397,6 +398,67 @@ async function loadOpenTables() {
   });
 }
 
+async function loadClosedTables() {
+  if (!closedTablesDiv) return;
+
+  closedTablesDiv.innerHTML = "Caricamento tavoli chiusi...";
+
+  const snapshot = await db
+    .collection("tables")
+    .where("status", "==", "closed")
+    .get();
+
+  const closedTodayTables = [];
+
+  snapshot.forEach(doc => {
+    const table = doc.data();
+
+    if (isToday(table.closedAt)) {
+      closedTodayTables.push({
+        id: doc.id,
+        ...table
+      });
+    }
+  });
+
+  if (closedTodayTables.length === 0) {
+    closedTablesDiv.innerHTML = "Nessun tavolo chiuso oggi";
+    return;
+  }
+
+  closedTodayTables.sort((a, b) => {
+    return new Date(b.closedAt) - new Date(a.closedAt);
+  });
+
+  closedTablesDiv.innerHTML = "";
+
+  closedTodayTables.forEach(table => {
+    const closedTime = new Date(table.closedAt).toLocaleTimeString("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const tableCard = document.createElement("div");
+    tableCard.className = "menu-item";
+
+    tableCard.innerHTML = `
+      <span>
+        ✅ Tavolo ${table.tableNumber}<br>
+        <small>Chiuso alle ${closedTime}</small><br>
+        <strong>€${Number(table.total || 0).toFixed(2)}</strong>
+      </span>
+
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button onclick="showTableHistory('${table.tableNumber}')">
+          📜 Dettaglio
+        </button>
+      </div>
+    `;
+
+    closedTablesDiv.appendChild(tableCard);
+  });
+}
+
 function selectTable(tableNumber) {
   document.getElementById("tableNumber").value = tableNumber;
 
@@ -496,6 +558,7 @@ async function closeTable(tableNumber) {
   loadOpenTables();
   renderTableMap();
   loadDailyStats();
+  loadClosedTables();
 }
 
 function isToday(dateString) {
@@ -691,7 +754,9 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
 
     await tableRef.set({
       tableNumber: table,
-      openedAt: existingDoc.exists ? existingDoc.data().openedAt || new Date().toISOString() : new Date().toISOString(),
+      openedAt: existingDoc.exists
+        ? existingDoc.data().openedAt || new Date().toISOString()
+        : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       orders: updatedOrders,
       total: updatedTotal,
@@ -711,6 +776,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     loadOpenTables();
     renderTableMap();
     loadDailyStats();
+    loadClosedTables();
 
   } else {
     alert("Errore durante l'invio dell'ordine");
@@ -723,3 +789,4 @@ renderCart();
 loadOpenTables();
 loadDailyStats();
 renderTableMap();
+loadClosedTables();
