@@ -137,12 +137,15 @@ let currentCategory = "⚡ Veloci";
 let orderType = "new";
 let searchQuery = "";
 
+const TOTAL_TABLES = 15;
+
 const menuDiv = document.getElementById("menu");
 const cartDiv = document.getElementById("cart");
 const categoriesDiv = document.querySelector(".categories");
 const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const dailyStatsDiv = document.getElementById("dailyStats");
+const tableMapDiv = document.getElementById("tableMap");
 
 function renderCategories() {
   categoriesDiv.innerHTML = "";
@@ -312,6 +315,50 @@ function renderCart() {
   cartDiv.innerHTML += `<hr><strong>Totale: €${total.toFixed(2)}</strong>`;
 }
 
+async function renderTableMap() {
+  if (!tableMapDiv) return;
+
+  tableMapDiv.innerHTML = "";
+
+  const snapshot = await db
+    .collection("tables")
+    .where("status", "==", "open")
+    .get();
+
+  const openTableNumbers = [];
+
+  snapshot.forEach(doc => {
+    openTableNumbers.push(String(doc.data().tableNumber));
+  });
+
+  for (let i = 1; i <= TOTAL_TABLES; i++) {
+    const tableNumber = String(i);
+    const isOpen = openTableNumbers.includes(tableNumber);
+
+    const button = document.createElement("button");
+    button.className = `table-button ${isOpen ? "table-open" : "table-free"}`;
+    button.textContent = `${isOpen ? "🔴" : "🟢"} ${i}`;
+
+    button.onclick = () => {
+      document.getElementById("tableNumber").value = tableNumber;
+
+      if (isOpen) {
+        orderType = "add";
+        addOrderBtn.classList.add("active");
+        newOrderBtn.classList.remove("active");
+        alert(`Tavolo ${tableNumber} selezionato per aggiunta`);
+      } else {
+        orderType = "new";
+        newOrderBtn.classList.add("active");
+        addOrderBtn.classList.remove("active");
+        alert(`Tavolo ${tableNumber} selezionato per nuova comanda`);
+      }
+    };
+
+    tableMapDiv.appendChild(button);
+  }
+}
+
 async function loadOpenTables() {
   openTablesDiv.innerHTML = "Caricamento tavoli...";
 
@@ -336,7 +383,7 @@ async function loadOpenTables() {
     tableCard.innerHTML = `
       <span>
         🔴 Tavolo ${table.tableNumber}<br>
-        <strong>€${table.total.toFixed(2)}</strong>
+        <strong>€${Number(table.total || 0).toFixed(2)}</strong>
       </span>
 
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -380,10 +427,10 @@ function buildTableSummary(tableNumber, table) {
       summary += `Note: ${order.notes}\n`;
     }
 
-    summary += `Totale ordine: €${order.total.toFixed(2)}\n\n`;
+    summary += `Totale ordine: €${Number(order.total || 0).toFixed(2)}\n\n`;
   });
 
-  summary += `TOTALE FINALE: €${table.total.toFixed(2)}`;
+  summary += `TOTALE FINALE: €${Number(table.total || 0).toFixed(2)}`;
 
   return summary;
 }
@@ -447,6 +494,7 @@ async function closeTable(tableNumber) {
   alert(`Tavolo ${tableNumber} chiuso correttamente ✅`);
 
   loadOpenTables();
+  renderTableMap();
   loadDailyStats();
 }
 
@@ -468,7 +516,7 @@ function incrementCounter(counter, key, quantity) {
     counter[key] = 0;
   }
 
-  counter[key] += quantity;
+  counter[key] += Number(quantity || 0);
 }
 
 function getTopItem(counter) {
@@ -638,11 +686,12 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     const updatedOrders = [...existingOrders, newOrder];
 
     const updatedTotal = updatedOrders.reduce((sum, order) => {
-      return sum + order.total;
+      return sum + Number(order.total || 0);
     }, 0);
 
     await tableRef.set({
       tableNumber: table,
+      openedAt: existingDoc.exists ? existingDoc.data().openedAt || new Date().toISOString() : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       orders: updatedOrders,
       total: updatedTotal,
@@ -660,6 +709,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
 
     renderCart();
     loadOpenTables();
+    renderTableMap();
     loadDailyStats();
 
   } else {
@@ -672,3 +722,4 @@ renderMenu();
 renderCart();
 loadOpenTables();
 loadDailyStats();
+renderTableMap();
