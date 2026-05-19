@@ -221,3 +221,35 @@ hr {
     gap: 6px;
   }
 }
+#smartBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 999;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  background: #ffffff;
+  border-top: 2px solid #ddd;
+
+  padding: 12px;
+
+  box-shadow: 0 -4px 14px rgba(0,0,0,0.15);
+
+  margin-top: 10px;
+}
+
+#smartBarInfo {
+  flex: 1;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+#smartBar button {
+  background: #1f8f3a;
+  font-size: 18px;
+  padding: 14px 18px;
+  min-width: 120px;
+}
