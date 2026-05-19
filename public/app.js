@@ -142,6 +142,7 @@ const cartDiv = document.getElementById("cart");
 const categoriesDiv = document.querySelector(".categories");
 const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
+const dailyStatsDiv = document.getElementById("dailyStats");
 
 function renderCategories() {
   categoriesDiv.innerHTML = "";
@@ -444,7 +445,127 @@ async function closeTable(tableNumber) {
     });
 
   alert(`Tavolo ${tableNumber} chiuso correttamente ✅`);
+
   loadOpenTables();
+  loadDailyStats();
+}
+
+function isToday(dateString) {
+  if (!dateString) return false;
+
+  const date = new Date(dateString);
+  const today = new Date();
+
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
+function incrementCounter(counter, key, quantity) {
+  if (!counter[key]) {
+    counter[key] = 0;
+  }
+
+  counter[key] += quantity;
+}
+
+function getTopItem(counter) {
+  const entries = Object.entries(counter);
+
+  if (entries.length === 0) {
+    return "Nessun dato";
+  }
+
+  entries.sort((a, b) => b[1] - a[1]);
+
+  return `${entries[0][0]} (${entries[0][1]})`;
+}
+
+function isPizzaCategory(category) {
+  return [
+    "Pizze Novus",
+    "Evergreen",
+    "Meneghine"
+  ].includes(category);
+}
+
+function isDrinkCategory(category) {
+  return [
+    "Bevande",
+    "Birre",
+    "Vini"
+  ].includes(category);
+}
+
+async function loadDailyStats() {
+  dailyStatsDiv.innerHTML = "Calcolo statistiche...";
+
+  const snapshot = await db.collection("tables").get();
+
+  let dailyRevenue = 0;
+  let openTables = 0;
+  let closedToday = 0;
+
+  const pizzaCounter = {};
+  const drinkCounter = {};
+
+  snapshot.forEach(doc => {
+    const table = doc.data();
+
+    if (table.status === "open") {
+      openTables += 1;
+    }
+
+    if (table.status === "closed" && isToday(table.closedAt)) {
+      closedToday += 1;
+      dailyRevenue += Number(table.total || 0);
+
+      const orders = table.orders || [];
+
+      orders.forEach(order => {
+        const items = order.items || [];
+
+        items.forEach(item => {
+          if (isPizzaCategory(item.category)) {
+            incrementCounter(pizzaCounter, item.name, item.quantity);
+          }
+
+          if (isDrinkCategory(item.category)) {
+            incrementCounter(drinkCounter, item.name, item.quantity);
+          }
+        });
+      });
+    }
+  });
+
+  dailyStatsDiv.innerHTML = `
+    <div class="menu-item">
+      <span>💰 Incasso oggi</span>
+      <strong>€${dailyRevenue.toFixed(2)}</strong>
+    </div>
+
+    <div class="menu-item">
+      <span>🔴 Tavoli aperti</span>
+      <strong>${openTables}</strong>
+    </div>
+
+    <div class="menu-item">
+      <span>✅ Tavoli chiusi oggi</span>
+      <strong>${closedToday}</strong>
+    </div>
+
+    <div class="menu-item">
+      <span>🍕 Pizza più venduta</span>
+      <strong>${getTopItem(pizzaCounter)}</strong>
+    </div>
+
+    <div class="menu-item">
+      <span>🥤 Bevanda più venduta</span>
+      <strong>${getTopItem(drinkCounter)}</strong>
+    </div>
+  `;
 }
 
 const newOrderBtn = document.getElementById("newOrderBtn");
@@ -539,6 +660,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
 
     renderCart();
     loadOpenTables();
+    loadDailyStats();
 
   } else {
     alert("Errore durante l'invio dell'ordine");
@@ -549,3 +671,4 @@ renderCategories();
 renderMenu();
 renderCart();
 loadOpenTables();
+loadDailyStats();
