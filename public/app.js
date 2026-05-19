@@ -144,9 +144,26 @@ const cartDiv = document.getElementById("cart");
 const categoriesDiv = document.querySelector(".categories");
 const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
-const dailyStatsDiv = document.getElementById("dailyStats");
 const tableMapDiv = document.getElementById("tableMap");
 const closedTablesDiv = document.getElementById("closedTables");
+
+function getElapsedTime(openedAt) {
+  if (!openedAt) return "0m";
+
+  const opened = new Date(openedAt);
+  const now = new Date();
+  const diffMs = now - opened;
+  const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+
+  if (hours <= 0) {
+    return `${minutes}m`;
+  }
+
+  return `${hours}h ${minutes}m`;
+}
 
 function renderCategories() {
   categoriesDiv.innerHTML = "";
@@ -326,19 +343,25 @@ async function renderTableMap() {
     .where("status", "==", "open")
     .get();
 
-  const openTableNumbers = [];
+  const openTables = {};
 
   snapshot.forEach(doc => {
-    openTableNumbers.push(String(doc.data().tableNumber));
+    const table = doc.data();
+    openTables[String(table.tableNumber)] = table;
   });
 
   for (let i = 1; i <= TOTAL_TABLES; i++) {
     const tableNumber = String(i);
-    const isOpen = openTableNumbers.includes(tableNumber);
+    const table = openTables[tableNumber];
+    const isOpen = Boolean(table);
 
     const button = document.createElement("button");
     button.className = `table-button ${isOpen ? "table-open" : "table-free"}`;
-    button.textContent = `${isOpen ? "🔴" : "🟢"} ${i}`;
+
+    button.innerHTML = `
+      ${isOpen ? "🔴" : "🟢"} ${i}
+      ${isOpen ? `<br><small>${getElapsedTime(table.openedAt)}</small>` : ""}
+    `;
 
     button.onclick = () => {
       document.getElementById("tableNumber").value = tableNumber;
@@ -384,7 +407,8 @@ async function loadOpenTables() {
     tableCard.innerHTML = `
       <span>
         🔴 Tavolo ${table.tableNumber}<br>
-        <strong>€${Number(table.total || 0).toFixed(2)}</strong>
+        <strong>€${Number(table.total || 0).toFixed(2)}</strong><br>
+        <small>⏱️ aperto da ${getElapsedTime(table.openedAt)}</small>
       </span>
 
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -557,7 +581,6 @@ async function closeTable(tableNumber) {
 
   loadOpenTables();
   renderTableMap();
-  loadDailyStats();
   loadClosedTables();
 }
 
@@ -572,111 +595,6 @@ function isToday(dateString) {
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate()
   );
-}
-
-function incrementCounter(counter, key, quantity) {
-  if (!counter[key]) {
-    counter[key] = 0;
-  }
-
-  counter[key] += Number(quantity || 0);
-}
-
-function getTopItem(counter) {
-  const entries = Object.entries(counter);
-
-  if (entries.length === 0) {
-    return "Nessun dato";
-  }
-
-  entries.sort((a, b) => b[1] - a[1]);
-
-  return `${entries[0][0]} (${entries[0][1]})`;
-}
-
-function isPizzaCategory(category) {
-  return [
-    "Pizze Novus",
-    "Evergreen",
-    "Meneghine"
-  ].includes(category);
-}
-
-function isDrinkCategory(category) {
-  return [
-    "Bevande",
-    "Birre",
-    "Vini"
-  ].includes(category);
-}
-
-async function loadDailyStats() {
-  dailyStatsDiv.innerHTML = "Calcolo statistiche...";
-
-  const snapshot = await db.collection("tables").get();
-
-  let dailyRevenue = 0;
-  let openTables = 0;
-  let closedToday = 0;
-
-  const pizzaCounter = {};
-  const drinkCounter = {};
-
-  snapshot.forEach(doc => {
-    const table = doc.data();
-
-    if (table.status === "open") {
-      openTables += 1;
-    }
-
-    if (table.status === "closed" && isToday(table.closedAt)) {
-      closedToday += 1;
-      dailyRevenue += Number(table.total || 0);
-
-      const orders = table.orders || [];
-
-      orders.forEach(order => {
-        const items = order.items || [];
-
-        items.forEach(item => {
-          if (isPizzaCategory(item.category)) {
-            incrementCounter(pizzaCounter, item.name, item.quantity);
-          }
-
-          if (isDrinkCategory(item.category)) {
-            incrementCounter(drinkCounter, item.name, item.quantity);
-          }
-        });
-      });
-    }
-  });
-
-  dailyStatsDiv.innerHTML = `
-    <div class="menu-item">
-      <span>💰 Incasso oggi</span>
-      <strong>€${dailyRevenue.toFixed(2)}</strong>
-    </div>
-
-    <div class="menu-item">
-      <span>🔴 Tavoli aperti</span>
-      <strong>${openTables}</strong>
-    </div>
-
-    <div class="menu-item">
-      <span>✅ Tavoli chiusi oggi</span>
-      <strong>${closedToday}</strong>
-    </div>
-
-    <div class="menu-item">
-      <span>🍕 Pizza più venduta</span>
-      <strong>${getTopItem(pizzaCounter)}</strong>
-    </div>
-
-    <div class="menu-item">
-      <span>🥤 Bevanda più venduta</span>
-      <strong>${getTopItem(drinkCounter)}</strong>
-    </div>
-  `;
 }
 
 const newOrderBtn = document.getElementById("newOrderBtn");
@@ -733,9 +651,11 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     const existingDoc = await tableRef.get();
 
     let existingOrders = [];
+    let openedAt = new Date().toISOString();
 
     if (existingDoc.exists) {
       existingOrders = existingDoc.data().orders || [];
+      openedAt = existingDoc.data().openedAt || openedAt;
     }
 
     const newOrder = {
@@ -754,9 +674,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
 
     await tableRef.set({
       tableNumber: table,
-      openedAt: existingDoc.exists
-        ? existingDoc.data().openedAt || new Date().toISOString()
-        : new Date().toISOString(),
+      openedAt: openedAt,
       updatedAt: new Date().toISOString(),
       orders: updatedOrders,
       total: updatedTotal,
@@ -775,8 +693,6 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     renderCart();
     loadOpenTables();
     renderTableMap();
-    loadDailyStats();
-    loadClosedTables();
 
   } else {
     alert("Errore durante l'invio dell'ordine");
@@ -787,6 +703,10 @@ renderCategories();
 renderMenu();
 renderCart();
 loadOpenTables();
-loadDailyStats();
 renderTableMap();
 loadClosedTables();
+
+setInterval(() => {
+  loadOpenTables();
+  renderTableMap();
+}, 60000);
