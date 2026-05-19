@@ -93,6 +93,29 @@ ${notes || "Nessuna nota"}
   }
 });
 
+app.post("/close-table", async (req, res) => {
+  try {
+    const { table, total, summary } = req.body;
+
+    const closeMessage = `
+💰 TAVOLO CHIUSO
+
+Tavolo: ${table}
+Totale finale: €${Number(total).toFixed(2)}
+
+${summary}
+`;
+
+    await bot.sendMessage(process.env.CASSA_CHAT_ID, closeMessage);
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error("Errore chiusura tavolo:", error.response?.body || error.message);
+    res.status(500).json({ success: false });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
 });
