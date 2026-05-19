@@ -1,4 +1,14 @@
 const menu = {
+  "⚡ Veloci": [
+    { name: "Coperto", price: 2.00 },
+    { name: "Margherita", price: 7.00 },
+    { name: "Patate fritte", price: 3.00 },
+    { name: "Acqua Naturale", price: 2.50 },
+    { name: "Acqua Lete", price: 2.50 },
+    { name: "Coca-cola 33cl", price: 2.50 },
+    { name: "Coca-cola Zero 33cl", price: 2.50 }
+  ],
+
   "Coperti": [
     { name: "Coperto", price: 2.00 }
   ],
@@ -123,13 +133,15 @@ const menu = {
 };
 
 const cart = [];
-let currentCategory = "Pizze Novus";
+let currentCategory = "⚡ Veloci";
 let orderType = "new";
+let searchQuery = "";
 
 const menuDiv = document.getElementById("menu");
 const cartDiv = document.getElementById("cart");
 const categoriesDiv = document.querySelector(".categories");
 const openTablesDiv = document.getElementById("openTables");
+const searchInput = document.getElementById("searchInput");
 
 function renderCategories() {
   categoriesDiv.innerHTML = "";
@@ -140,6 +152,8 @@ function renderCategories() {
 
     button.onclick = () => {
       currentCategory = category;
+      searchInput.value = "";
+      searchQuery = "";
       renderMenu();
     };
 
@@ -147,27 +161,75 @@ function renderCategories() {
   });
 }
 
+function getAllProducts() {
+  const products = [];
+
+  Object.keys(menu).forEach(category => {
+    menu[category].forEach(item => {
+      products.push({
+        ...item,
+        category
+      });
+    });
+  });
+
+  return products;
+}
+
 function renderMenu() {
   menuDiv.innerHTML = "";
 
-  menu[currentCategory].forEach(item => {
+  let itemsToShow = [];
+
+  if (searchQuery.trim()) {
+    itemsToShow = getAllProducts().filter(item =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  } else {
+    itemsToShow = menu[currentCategory].map(item => ({
+      ...item,
+      category: currentCategory
+    }));
+  }
+
+  if (itemsToShow.length === 0) {
+    menuDiv.innerHTML = "Nessun prodotto trovato";
+    return;
+  }
+
+  itemsToShow.forEach(item => {
     const row = document.createElement("div");
     row.className = "menu-item";
 
-    row.innerHTML = `
-      <span>
-        ${item.name}<br>
-        <strong>€${item.price.toFixed(2)}</strong>
-      </span>
-      <button onclick="addToCart('${item.name}', ${item.price})">+</button>
+    const info = document.createElement("span");
+    info.innerHTML = `
+      ${item.name}<br>
+      <small>${item.category}</small><br>
+      <strong>€${item.price.toFixed(2)}</strong>
     `;
 
+    const button = document.createElement("button");
+    button.textContent = "+";
+    button.onclick = () => addToCart(item.name, item.price, item.category);
+
+    row.appendChild(info);
+    row.appendChild(button);
     menuDiv.appendChild(row);
   });
 }
 
-function addToCart(name, price) {
-  const existingItem = cart.find(item => item.name === name && !item.modification);
+searchInput.addEventListener("input", () => {
+  searchQuery = searchInput.value;
+  renderMenu();
+});
+
+function addToCart(name, price, category) {
+  const existingItem = cart.find(
+    item =>
+      item.name === name &&
+      item.category === category &&
+      !item.modification
+  );
 
   if (existingItem) {
     existingItem.quantity += 1;
@@ -175,6 +237,7 @@ function addToCart(name, price) {
     cart.push({
       name,
       price,
+      category,
       quantity: 1,
       modification: ""
     });
@@ -233,13 +296,14 @@ function renderCart() {
       <div class="menu-item">
         <span>
           ${item.name} x${item.quantity}<br>
+          <small>${item.category}</small><br>
           <strong>€${lineTotal.toFixed(2)}</strong>
           ${modificationText}
         </span>
 
         <div style="display:flex; gap:5px; flex-wrap:wrap;">
           <button onclick="decreaseItem(${index})">-</button>
-          <button onclick="addToCart('${item.name}', ${item.price})">+</button>
+          <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.category.replace(/'/g, "\\'")}')">+</button>
           <button onclick="editModification(${index})">Modifica</button>
           <button onclick="removeItem(${index})">x</button>
         </div>
