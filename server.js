@@ -13,33 +13,34 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, {
 app.use(express.json());
 app.use(express.static("public"));
 
-const excludedCategories = [
-  "Bevande",
-  "Birre",
-  "Vini",
-  "Coperti"
-];
-
-function isKitchenItem(item) {
+function isNotKitchenItem(item) {
+  const name = (item.name || "").toLowerCase();
   const category = item.category || "";
-  const name = item.name.toLowerCase();
 
-  if (excludedCategories.includes(category)) return false;
-  if (name.includes("coperto")) return false;
-  if (name.includes("acqua")) return false;
-  if (name.includes("coca")) return false;
-  if (name.includes("fanta")) return false;
-  if (name.includes("sprite")) return false;
-  if (name.includes("chinotto")) return false;
-  if (name.includes("birra")) return false;
-  if (name.includes("vino")) return false;
-  if (name.includes("rallo")) return false;
-  if (name.includes("purato")) return false;
-  if (name.includes("feudo")) return false;
-  if (name.includes("puglisi")) return false;
-  if (name.includes("funaro")) return false;
-
-  return true;
+  return (
+    category === "Bevande" ||
+    category === "Birre" ||
+    category === "Vini" ||
+    category === "Coperti" ||
+    name.includes("coperto") ||
+    name.includes("acqua") ||
+    name.includes("coca") ||
+    name.includes("fanta") ||
+    name.includes("sprite") ||
+    name.includes("chinotto") ||
+    name.includes("rallo") ||
+    name.includes("purato") ||
+    name.includes("funaro") ||
+    name.includes("feudo") ||
+    name.includes("puglisi") ||
+    name.includes("trappe") ||
+    name.includes("menabrea") ||
+    name.includes("forst") ||
+    name.includes("carlsberg") ||
+    name.includes("kronenbourg") ||
+    name.includes("birra") ||
+    name.includes("semedorato")
+  );
 }
 
 function formatItems(items, showPrice = true) {
@@ -67,21 +68,7 @@ app.post("/send-order", async (req, res) => {
         ? "➕ AGGIUNTA TAVOLO"
         : "🍕 NUOVA COMANDA";
 
-    const kitchenItems = cart.filter(isKitchenItem);
-
-    if (kitchenItems.length > 0) {
-      const pizzeriaMessage = `
-${title}
-
-🍽️ Tavolo ${table}
-
-${formatItems(kitchenItems, false)}
-
-${notes ? `📝 Note:\n${notes}` : ""}
-`;
-
-      await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
-    }
+    const kitchenItems = cart.filter(item => !isNotKitchenItem(item));
 
     const cassaMessage = `
 ${title}
@@ -96,6 +83,18 @@ ${notes ? `📝 Note:\n${notes}` : ""}
 `;
 
     await bot.sendMessage(process.env.CASSA_CHAT_ID, cassaMessage);
+
+    const pizzeriaMessage = `
+${title}
+
+🍽️ Tavolo ${table}
+
+${kitchenItems.length > 0 ? formatItems(kitchenItems, false) : "⚠️ Nessun prodotto cucina riconosciuto"}
+
+${notes ? `📝 Note:\n${notes}` : ""}
+`;
+
+    await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
 
     res.json({ success: true });
 
