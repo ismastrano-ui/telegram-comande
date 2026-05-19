@@ -13,6 +13,29 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, {
 app.use(express.json());
 app.use(express.static("public"));
 
+const kitchenCategories = [
+  "Stuzzicherie",
+  "Fondute",
+  "Novità",
+  "Pizze Novus",
+  "Evergreen",
+  "Meneghine",
+  "Dolci"
+];
+
+function formatItems(items) {
+  return items
+    .map(item => {
+      const baseLine = `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`;
+      const modificationLine = item.modification
+        ? `\n   Modifica: ${item.modification}`
+        : "";
+
+      return baseLine + modificationLine;
+    })
+    .join("\n");
+}
+
 app.post("/send-order", async (req, res) => {
   try {
     const { table, notes, cart, total, orderType } = req.body;
@@ -22,23 +45,22 @@ app.post("/send-order", async (req, res) => {
         ? "➕ AGGIUNTA TAVOLO"
         : "🍕 NUOVA COMANDA";
 
-    const itemsText = cart
-      .map(item => {
-        const baseLine = `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}`;
-        const modificationLine = item.modification
-          ? `\n   Modifica: ${item.modification}`
-          : "";
+    const kitchenItems = cart.filter(item =>
+      kitchenCategories.includes(item.category)
+    );
 
-        return baseLine + modificationLine;
-      })
-      .join("\n");
+    const kitchenText = kitchenItems.length > 0
+      ? formatItems(kitchenItems)
+      : "Nessun prodotto per pizzeria/cucina";
+
+    const fullText = formatItems(cart);
 
     const pizzeriaMessage = `
 ${title}
 
 Tavolo: ${table}
 
-${itemsText}
+${kitchenText}
 
 Note:
 ${notes || "Nessuna nota"}
@@ -49,7 +71,7 @@ ${title}
 
 Tavolo: ${table}
 
-${itemsText}
+${fullText}
 
 Totale: €${total.toFixed(2)}
 
@@ -57,7 +79,10 @@ Note:
 ${notes || "Nessuna nota"}
 `;
 
-    await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
+    if (kitchenItems.length > 0) {
+      await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
+    }
+
     await bot.sendMessage(process.env.CASSA_CHAT_ID, cassaMessage);
 
     res.json({ success: true });
