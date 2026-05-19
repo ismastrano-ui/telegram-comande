@@ -1,4 +1,8 @@
 const menu = {
+  "Coperti": [
+    { name: "Coperto", price: 2.00 }
+  ],
+
   "Stuzzicherie": [
     { name: "Mix Fritto", price: 7.90 },
     { name: "Petali di Patate", price: 4.50 },
@@ -69,9 +73,6 @@ const menu = {
     { name: "Churros per 2", price: 8.00 },
     { name: "Semifreddo Amaro del Capo", price: 5.50 }
   ],
-  "Coperti": [
-    { name: "Coperto", price: 2.00 }
-  ],
 
   "Vini": [
     { name: "Rallo, Il Principe - bottiglia", price: 15.00 },
@@ -105,6 +106,7 @@ const menu = {
     { name: "Spina Messina 40cl", price: 6.00 },
     { name: "Semedorato 66cl", price: 5.90 }
   ],
+
   "Bevande": [
     { name: "Acqua Naturale", price: 2.50 },
     { name: "Acqua Lete", price: 2.50 },
@@ -120,6 +122,7 @@ const menu = {
 
 const cart = [];
 let currentCategory = "Pizze Novus";
+let orderType = "new";
 
 const menuDiv = document.getElementById("menu");
 const cartDiv = document.getElementById("cart");
@@ -130,7 +133,6 @@ function renderCategories() {
 
   Object.keys(menu).forEach(category => {
     const button = document.createElement("button");
-
     button.textContent = category;
 
     button.onclick = () => {
@@ -147,7 +149,6 @@ function renderMenu() {
 
   menu[currentCategory].forEach(item => {
     const row = document.createElement("div");
-
     row.className = "menu-item";
 
     row.innerHTML = `
@@ -155,10 +156,7 @@ function renderMenu() {
         ${item.name}<br>
         <strong>€${item.price.toFixed(2)}</strong>
       </span>
-
-      <button onclick="addToCart('${item.name}', ${item.price})">
-        +
-      </button>
+      <button onclick="addToCart('${item.name}', ${item.price})">+</button>
     `;
 
     menuDiv.appendChild(row);
@@ -171,57 +169,10 @@ function addToCart(name, price) {
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
-    cart.push({
-      name,
-      price,
-      quantity: 1
-    });
+    cart.push({ name, price, quantity: 1 });
   }
 
   renderCart();
-}
-
-function renderCart() {
-  if (cart.length === 0) {
-    cartDiv.innerHTML = "Nessun prodotto inserito";
-    return;
-  }
-
-  let total = 0;
-
-  cartDiv.innerHTML = "";
-
-  cart.forEach((item, index) => {
-    const lineTotal = item.price * item.quantity;
-
-    total += lineTotal;
-
-    cartDiv.innerHTML += `
-      <div class="menu-item">
-        <span>
-          ${item.name} x${item.quantity}<br>
-          <strong>€${lineTotal.toFixed(2)}</strong>
-        </span>
-
-        <div style="display:flex; gap:5px;">
-          <button onclick="decreaseItem(${index})">-</button>
-
-          <button onclick="addToCart('${item.name}', ${item.price})">
-            +
-          </button>
-
-          <button onclick="removeItem(${index})">
-            x
-          </button>
-        </div>
-      </div>
-    `;
-  });
-
-  cartDiv.innerHTML += `
-    <hr>
-    <strong>Totale: €${total.toFixed(2)}</strong>
-  `;
 }
 
 function decreaseItem(index) {
@@ -236,13 +187,55 @@ function decreaseItem(index) {
 
 function removeItem(index) {
   cart.splice(index, 1);
-
   renderCart();
 }
 
-renderCategories();
-renderMenu();
-renderCart();
+function renderCart() {
+  if (cart.length === 0) {
+    cartDiv.innerHTML = "Nessun prodotto inserito";
+    return;
+  }
+
+  let total = 0;
+  cartDiv.innerHTML = "";
+
+  cart.forEach((item, index) => {
+    const lineTotal = item.price * item.quantity;
+    total += lineTotal;
+
+    cartDiv.innerHTML += `
+      <div class="menu-item">
+        <span>
+          ${item.name} x${item.quantity}<br>
+          <strong>€${lineTotal.toFixed(2)}</strong>
+        </span>
+        <div style="display:flex; gap:5px;">
+          <button onclick="decreaseItem(${index})">-</button>
+          <button onclick="addToCart('${item.name}', ${item.price})">+</button>
+          <button onclick="removeItem(${index})">x</button>
+        </div>
+      </div>
+    `;
+  });
+
+  cartDiv.innerHTML += `<hr><strong>Totale: €${total.toFixed(2)}</strong>`;
+}
+
+const newOrderBtn = document.getElementById("newOrderBtn");
+const addOrderBtn = document.getElementById("addOrderBtn");
+
+newOrderBtn.addEventListener("click", () => {
+  orderType = "new";
+  newOrderBtn.classList.add("active");
+  addOrderBtn.classList.remove("active");
+});
+
+addOrderBtn.addEventListener("click", () => {
+  orderType = "add";
+  addOrderBtn.classList.add("active");
+  newOrderBtn.classList.remove("active");
+});
+
 document.getElementById("sendOrder").addEventListener("click", async () => {
   const table = document.getElementById("tableNumber").value;
   const notes = document.getElementById("notes").value;
@@ -270,7 +263,8 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
       table,
       notes,
       cart,
-      total
+      total,
+      orderType
     })
   });
 
@@ -278,10 +272,20 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
 
   if (result.success) {
     alert("Ordine inviato correttamente ✅");
+
     cart.length = 0;
     document.getElementById("notes").value = "";
+
+    if (orderType === "new") {
+      document.getElementById("tableNumber").value = "";
+    }
+
     renderCart();
   } else {
     alert("Errore durante l'invio dell'ordine");
   }
 });
+
+renderCategories();
+renderMenu();
+renderCart();
