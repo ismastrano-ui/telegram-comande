@@ -297,6 +297,37 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
   const result = await response.json();
 
   if (result.success) {
+    const tableRef = db.collection("tables").doc(table);
+    const existingDoc = await tableRef.get();
+
+    let existingOrders = [];
+
+    if (existingDoc.exists) {
+      existingOrders = existingDoc.data().orders || [];
+    }
+
+    const newOrder = {
+      type: orderType,
+      createdAt: new Date().toISOString(),
+      items: cart.map(item => ({ ...item })),
+      notes: notes,
+      total: total
+    };
+
+    const updatedOrders = [...existingOrders, newOrder];
+
+    const updatedTotal = updatedOrders.reduce((sum, order) => {
+      return sum + order.total;
+    }, 0);
+
+    await tableRef.set({
+      tableNumber: table,
+      updatedAt: new Date().toISOString(),
+      orders: updatedOrders,
+      total: updatedTotal,
+      status: "open"
+    });
+
     alert("Ordine inviato correttamente ✅");
 
     cart.length = 0;
