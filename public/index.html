@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Comande Pizzeria</title>
 
   <link rel="stylesheet" href="style.css" />
@@ -16,16 +17,17 @@
 
 <body>
   <div class="app">
+
     <h1>🍕 Comande</h1>
 
     <section class="card">
-      <h2>📊 Statistiche giornata</h2>
-      <div id="dailyStats">Caricamento statistiche...</div>
-    </section>
-
-    <section class="card">
       <h2>🪑 Mappa tavoli</h2>
-      <div class="legend">🟢 libero &nbsp; 🔴 occupato</div>
+
+      <div class="legend">
+        🟢 libero &nbsp;
+        🔴 occupato
+      </div>
+
       <div id="tableMap" class="table-grid"></div>
     </section>
 
@@ -41,16 +43,37 @@
 
     <section class="card">
       <label>Tavolo</label>
-      <input id="tableNumber" type="number" placeholder="Es. 5" />
+
+      <input
+        id="tableNumber"
+        type="number"
+        placeholder="Es. 5"
+      />
 
       <div class="order-type">
-        <button id="newOrderBtn" class="active" type="button">Nuova comanda</button>
-        <button id="addOrderBtn" type="button">Aggiunta tavolo</button>
+        <button
+          id="newOrderBtn"
+          class="active"
+          type="button"
+        >
+          Nuova comanda
+        </button>
+
+        <button
+          id="addOrderBtn"
+          type="button"
+        >
+          Aggiunta tavolo
+        </button>
       </div>
     </section>
 
     <section class="card">
-      <input id="searchInput" type="text" placeholder="🔎 Cerca prodotto..." />
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="🔎 Cerca prodotto..."
+      />
     </section>
 
     <section class="categories"></section>
@@ -62,13 +85,25 @@
 
     <section class="card">
       <h2>Carrello</h2>
-      <div id="cart">Nessun prodotto inserito</div>
-      <textarea id="notes" placeholder="Note generali per cucina/cassa"></textarea>
-      <button id="sendOrder">Invia ordine</button>
+
+      <div id="cart">
+        Nessun prodotto inserito
+      </div>
+
+      <textarea
+        id="notes"
+        placeholder="Note generali per cucina/cassa"
+      ></textarea>
+
+      <button id="sendOrder">
+        Invia ordine
+      </button>
     </section>
+
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
@@ -82,6 +117,7 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.firestore();
   </script>
 
