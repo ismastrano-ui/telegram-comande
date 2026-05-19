@@ -10,15 +10,35 @@
   <link rel="manifest" href="manifest.json" />
 
   <meta name="theme-color" content="#111111" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Comande" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 
 <body>
-  <div class="app">
+
+  <div id="loginScreen" class="app">
+
+    <h1>🍕 Accesso Sala</h1>
+
+    <section class="card">
+
+      <input
+        id="accessCode"
+        type="password"
+        placeholder="Inserisci codice"
+      />
+
+      <button id="loginButton">
+        Entra
+      </button>
+
+    </section>
+
+  </div>
+
+  <div id="mainApp" class="app" style="display:none;">
 
     <h1>🍕 Comande</h1>
+
+    <div id="loggedUser"></div>
 
     <section class="card">
       <h2>🪑 Mappa tavoli</h2>
@@ -33,15 +53,16 @@
 
     <section class="card">
       <h2>Tavoli aperti</h2>
-      <div id="openTables">Caricamento tavoli...</div>
+      <div id="openTables"></div>
     </section>
 
     <section class="card">
       <h2>🗂️ Tavoli chiusi oggi</h2>
-      <div id="closedTables">Caricamento storico...</div>
+      <div id="closedTables"></div>
     </section>
 
     <section class="card">
+
       <label>Tavolo</label>
 
       <input
@@ -51,6 +72,7 @@
       />
 
       <div class="order-type">
+
         <button
           id="newOrderBtn"
           class="active"
@@ -65,39 +87,46 @@
         >
           Aggiunta tavolo
         </button>
+
       </div>
+
     </section>
 
     <section class="card">
+
       <input
         id="searchInput"
         type="text"
         placeholder="🔎 Cerca prodotto..."
       />
+
     </section>
 
     <section class="categories"></section>
 
     <section class="card">
+
       <h2>Menu</h2>
+
       <div id="menu"></div>
+
     </section>
 
     <section class="card">
+
       <h2>Carrello</h2>
 
-      <div id="cart">
-        Nessun prodotto inserito
-      </div>
+      <div id="cart"></div>
 
       <textarea
         id="notes"
-        placeholder="Note generali per cucina/cassa"
+        placeholder="Note generali"
       ></textarea>
 
       <button id="sendOrder">
         Invia ordine
       </button>
+
     </section>
 
   </div>
@@ -123,10 +152,5 @@
 
   <script src="app.js"></script>
 
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
 </body>
 </html>
