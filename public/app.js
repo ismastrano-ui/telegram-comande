@@ -164,15 +164,34 @@ function renderMenu() {
 }
 
 function addToCart(name, price) {
-  const existingItem = cart.find(item => item.name === name);
+  const existingItem = cart.find(item => item.name === name && !item.modification);
 
   if (existingItem) {
     existingItem.quantity += 1;
   } else {
-    cart.push({ name, price, quantity: 1 });
+    cart.push({
+      name,
+      price,
+      quantity: 1,
+      modification: ""
+    });
   }
 
   renderCart();
+}
+
+function editModification(index) {
+  const currentModification = cart[index].modification || "";
+
+  const newModification = prompt(
+    `Inserisci modifica per ${cart[index].name}`,
+    currentModification
+  );
+
+  if (newModification !== null) {
+    cart[index].modification = newModification.trim();
+    renderCart();
+  }
 }
 
 function decreaseItem(index) {
@@ -203,15 +222,22 @@ function renderCart() {
     const lineTotal = item.price * item.quantity;
     total += lineTotal;
 
+    const modificationText = item.modification
+      ? `<br><em>Modifica: ${item.modification}</em>`
+      : "";
+
     cartDiv.innerHTML += `
       <div class="menu-item">
         <span>
           ${item.name} x${item.quantity}<br>
           <strong>€${lineTotal.toFixed(2)}</strong>
+          ${modificationText}
         </span>
-        <div style="display:flex; gap:5px;">
+
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
           <button onclick="decreaseItem(${index})">-</button>
           <button onclick="addToCart('${item.name}', ${item.price})">+</button>
+          <button onclick="editModification(${index})">Modifica</button>
           <button onclick="removeItem(${index})">x</button>
         </div>
       </div>
