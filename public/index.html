@@ -11,6 +11,11 @@
     <h1>🍕 Comande</h1>
 
     <section class="card">
+      <h2>Tavoli aperti</h2>
+      <div id="openTables">Caricamento tavoli...</div>
+    </section>
+
+    <section class="card">
       <label>Tavolo</label>
       <input id="tableNumber" type="number" placeholder="Es. 5" />
 
@@ -35,7 +40,6 @@
     </section>
   </div>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -46,7 +50,7 @@
       projectId: "telegram-comande",
       storageBucket: "telegram-comande.firebasestorage.app",
       messagingSenderId: "180271164173",
-      appId: ":180271164173:web:6aff8c8bb604131f5bde44"
+      appId: "1:180271164173:web:6aff8c8bb604131f5bde44"
     };
 
     firebase.initializeApp(firebaseConfig);
