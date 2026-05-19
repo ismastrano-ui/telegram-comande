@@ -1,3 +1,11 @@
+const waiterCodes = {
+  "1111": "Marco",
+  "2222": "Luca",
+  "3333": "Admin"
+};
+
+let loggedWaiter = localStorage.getItem("loggedWaiter") || "";
+
 const menu = {
   "⚡ Veloci": [
     { name: "Coperto", price: 2.00 },
@@ -139,6 +147,12 @@ let searchQuery = "";
 
 const TOTAL_TABLES = 15;
 
+const loginScreen = document.getElementById("loginScreen");
+const mainApp = document.getElementById("mainApp");
+const loggedUserDiv = document.getElementById("loggedUser");
+const accessCodeInput = document.getElementById("accessCode");
+const loginButton = document.getElementById("loginButton");
+
 const menuDiv = document.getElementById("menu");
 const cartDiv = document.getElementById("cart");
 const categoriesDiv = document.querySelector(".categories");
@@ -146,6 +160,49 @@ const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
 const closedTablesDiv = document.getElementById("closedTables");
+
+function showMainApp() {
+  loginScreen.style.display = "none";
+  mainApp.style.display = "block";
+
+  loggedUserDiv.innerHTML = `
+    <section class="card">
+      👤 Operatore: <strong>${loggedWaiter}</strong>
+      <button onclick="logoutWaiter()" style="margin-top:10px;">Esci</button>
+    </section>
+  `;
+
+  renderCategories();
+  renderMenu();
+  renderCart();
+  loadOpenTables();
+  renderTableMap();
+  loadClosedTables();
+}
+
+function logoutWaiter() {
+  localStorage.removeItem("loggedWaiter");
+  loggedWaiter = "";
+  mainApp.style.display = "none";
+  loginScreen.style.display = "block";
+}
+
+if (loggedWaiter) {
+  showMainApp();
+}
+
+loginButton.addEventListener("click", () => {
+  const code = accessCodeInput.value.trim();
+
+  if (!waiterCodes[code]) {
+    alert("Codice non valido");
+    return;
+  }
+
+  loggedWaiter = waiterCodes[code];
+  localStorage.setItem("loggedWaiter", loggedWaiter);
+  showMainApp();
+});
 
 function getElapsedTime(openedAt) {
   if (!openedAt) return "0m";
@@ -370,12 +427,10 @@ async function renderTableMap() {
         orderType = "add";
         addOrderBtn.classList.add("active");
         newOrderBtn.classList.remove("active");
-        alert(`Tavolo ${tableNumber} selezionato per aggiunta`);
       } else {
         orderType = "new";
         newOrderBtn.classList.add("active");
         addOrderBtn.classList.remove("active");
-        alert(`Tavolo ${tableNumber} selezionato per nuova comanda`);
       }
     };
 
@@ -490,8 +545,6 @@ function selectTable(tableNumber) {
 
   addOrderBtn.classList.add("active");
   newOrderBtn.classList.remove("active");
-
-  alert(`Tavolo ${tableNumber} selezionato per aggiunta`);
 }
 
 function buildTableSummary(tableNumber, table) {
@@ -500,6 +553,7 @@ function buildTableSummary(tableNumber, table) {
 
   orders.forEach((order, index) => {
     summary += `ORDINE ${index + 1} - ${order.type === "add" ? "Aggiunta" : "Nuova comanda"}\n`;
+    summary += `👤 Cameriere: ${order.waiter || "N/D"}\n`;
 
     order.items.forEach(item => {
       summary += `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}\n`;
@@ -613,6 +667,11 @@ addOrderBtn.addEventListener("click", () => {
 });
 
 document.getElementById("sendOrder").addEventListener("click", async () => {
+  if (!loggedWaiter) {
+    alert("Effettua il login");
+    return;
+  }
+
   const table = document.getElementById("tableNumber").value;
   const notes = document.getElementById("notes").value;
 
@@ -640,7 +699,8 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
       notes,
       cart,
       total,
-      orderType
+      orderType,
+      waiter: loggedWaiter
     })
   });
 
@@ -659,6 +719,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     }
 
     const newOrder = {
+      waiter: loggedWaiter,
       type: orderType,
       createdAt: new Date().toISOString(),
       items: cart.map(item => ({ ...item })),
@@ -693,20 +754,16 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     renderCart();
     loadOpenTables();
     renderTableMap();
+    loadClosedTables();
 
   } else {
     alert("Errore durante l'invio dell'ordine");
   }
 });
 
-renderCategories();
-renderMenu();
-renderCart();
-loadOpenTables();
-renderTableMap();
-loadClosedTables();
-
 setInterval(() => {
-  loadOpenTables();
-  renderTableMap();
+  if (loggedWaiter) {
+    loadOpenTables();
+    renderTableMap();
+  }
 }, 60000);
