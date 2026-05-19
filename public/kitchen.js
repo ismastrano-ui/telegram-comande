@@ -47,6 +47,8 @@ function renderKitchenOrders(tables) {
     const orders = table.orders || [];
 
     orders.forEach((order, orderIndex) => {
+      if (order.kitchenDone) return;
+
       const kitchenItems = (order.items || []).filter(isKitchenItem);
 
       if (kitchenItems.length === 0) return;
@@ -60,7 +62,7 @@ function renderKitchenOrders(tables) {
 
       kitchenItems.forEach(item => {
         itemsHtml += `
-          <div style="margin-bottom:8px;">
+          <div style="margin-bottom:10px;">
             <strong>${item.quantity} x ${item.name}</strong>
             ${item.modification ? `<br><em>✏️ ${item.modification}</em>` : ""}
           </div>
@@ -70,11 +72,20 @@ function renderKitchenOrders(tables) {
       card.innerHTML = `
         <span>
           <strong>🍽️ Tavolo ${table.tableNumber}</strong><br>
-          <small>${order.type === "add" ? "➕ Aggiunta" : "🍕 Nuova comanda"} - ${formatTime(order.createdAt)}</small>
+          <small>
+            ${order.type === "add" ? "➕ Aggiunta" : "🍕 Nuova comanda"}
+            - ${formatTime(order.createdAt)}
+          </small>
           <hr>
           ${itemsHtml}
           ${order.notes ? `<br><small>📝 Note: ${order.notes}</small>` : ""}
         </span>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button onclick="markKitchenDone('${table.id}', ${orderIndex})">
+            ✅ Evasa
+          </button>
+        </div>
       `;
 
       kitchenOrdersDiv.appendChild(card);
@@ -84,6 +95,37 @@ function renderKitchenOrders(tables) {
   if (!hasOrders) {
     kitchenOrdersDiv.innerHTML = "Nessuna comanda cucina attiva";
   }
+}
+
+async function markKitchenDone(tableId, orderIndex) {
+  const confirmDone = confirm("Segnare questa comanda come evasa?");
+
+  if (!confirmDone) return;
+
+  const tableRef = db.collection("tables").doc(tableId);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) {
+    alert("Tavolo non trovato");
+    return;
+  }
+
+  const table = doc.data();
+  const orders = table.orders || [];
+
+  if (!orders[orderIndex]) {
+    alert("Comanda non trovata");
+    return;
+  }
+
+  orders[orderIndex].kitchenDone = true;
+  orders[orderIndex].kitchenDoneAt = new Date().toISOString();
+
+  await tableRef.update({
+    orders: orders
+  });
+
+  alert("Comanda evasa ✅");
 }
 
 function loadKitchenOrders() {
