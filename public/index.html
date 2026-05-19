@@ -3,9 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Comande Pizzeria</title>
+
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Comande" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
+
 <body>
   <div class="app">
     <h1>🍕 Comande</h1>
@@ -67,5 +76,11 @@
   </script>
 
   <script src="app.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
 </body>
 </html>
