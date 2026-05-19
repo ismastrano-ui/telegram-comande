@@ -13,14 +13,12 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, {
 app.use(express.json());
 app.use(express.static("public"));
 
-const kitchenCategories = [
-  "Stuzzicherie",
-  "Fondute",
-  "Novità",
-  "Pizze Novus",
-  "Evergreen",
-  "Meneghine",
-  "Dolci"
+const excludedFromKitchen = [
+  "Bevande",
+  "Birre",
+  "Vini",
+  "Coperti",
+  "⚡ Veloci"
 ];
 
 function formatItems(items, showPrice = true) {
@@ -49,10 +47,23 @@ app.post("/send-order", async (req, res) => {
         : "🍕 NUOVA COMANDA";
 
     const kitchenItems = cart.filter(item =>
-      kitchenCategories.includes(item.category)
+      !excludedFromKitchen.includes(item.category)
     );
 
-    const pizzeriaMessage = `
+    const cassaMessage = `
+${title}
+
+🍽️ Tavolo ${table}
+
+${formatItems(cart, true)}
+
+💰 Totale: €${Number(total).toFixed(2)}
+
+${notes ? `📝 Note:\n${notes}` : ""}
+`;
+
+    if (kitchenItems.length > 0) {
+      const pizzeriaMessage = `
 ${title}
 
 🍽️ Tavolo ${table}
@@ -62,19 +73,6 @@ ${formatItems(kitchenItems, false)}
 ${notes ? `📝 Note:\n${notes}` : ""}
 `;
 
-    const cassaMessage = `
-${title}
-
-🍽️ Tavolo ${table}
-
-${formatItems(cart, true)}
-
-💰 Totale: €${total.toFixed(2)}
-
-${notes ? `📝 Note:\n${notes}` : ""}
-`;
-
-    if (kitchenItems.length > 0) {
       await bot.sendMessage(process.env.PIZZERIA_CHAT_ID, pizzeriaMessage);
     }
 
