@@ -163,9 +163,7 @@ const tableMapDiv = document.getElementById("tableMap");
 const smartBarInfo = document.getElementById("smartBarInfo");
 
 async function showMainApp() {
-
   loginScreen.style.display = "none";
-
   mainApp.style.display = "block";
 
   await loadExtras();
@@ -173,13 +171,7 @@ async function showMainApp() {
   loggedUserDiv.innerHTML = `
     <section class="card">
       👤 Operatore: <strong>${loggedWaiter}</strong>
-
-      <button
-        onclick="logoutWaiter()"
-        style="margin-top:10px;"
-      >
-        Esci
-      </button>
+      <button onclick="logoutWaiter()" style="margin-top:10px;">Esci</button>
     </section>
   `;
 
@@ -198,7 +190,7 @@ function logoutWaiter() {
 }
 
 if (loggedWaiter) {
-  await loadExtras();
+await loadExtras();
 showMainApp();
 }
 
