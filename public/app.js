@@ -964,36 +964,174 @@ async function deleteItemRealtime(tableNumber, orderIndex, itemIndex) {
   await updateTableAfterEdit(tableNumber, orders);
 }
 
-async function addExtraRealtime(tableNumber, orderIndex, itemIndex) {
-  const orders = await getTableOrders(tableNumber);
+const EXTRAS = [
+
+  { name: "Alici", price: 1.50 },
+  { name: "Acciughe", price: 1.50 },
+  { name: "Bufala", price: 2.00 },
+  { name: "Bresaola", price: 2.00 },
+  { name: "Capunata", price: 1.50 },
+  { name: "Chips", price: 1.00 },
+  { name: "Cipolla caramellata", price: 1.00 },
+  { name: "Cipolletta", price: 0.50 },
+  { name: "Crema funghi", price: 2.00 },
+  { name: "Crema zucca", price: 1.50 },
+  { name: "Crema melanzane", price: 1.50 },
+  { name: "Farfalle", price: 1.50 },
+  { name: "Funghi", price: 1.50 },
+  { name: "Funghi porcini", price: 3.00 },
+  { name: "Gorgonzola", price: 1.50 },
+  { name: "Guanciale", price: 2.00 },
+  { name: "Patate", price: 1.00 },
+  { name: "Polpa", price: 1.00 },
+  { name: "Pomodorini", price: 1.00 },
+  { name: "Peperoni", price: 1.00 },
+  { name: "Prosciutto cotto", price: 2.50 },
+  { name: "Prosciutto crudo", price: 2.50 },
+  { name: "Ricotta salata", price: 1.50 },
+  { name: "Rucola", price: 1.00 },
+  { name: "Radicchio", price: 1.00 },
+  { name: "Salame", price: 1.50 },
+  { name: "Salsiccia", price: 1.50 },
+  { name: "Songino", price: 1.50 },
+  { name: "Scamorza affumicata", price: 1.50 },
+  { name: "Uovo", price: 1.00 },
+  { name: "Wurstel", price: 1.00 },
+  { name: "Mollica", price: 0.50 },
+  { name: "Miele", price: 1.00 },
+  { name: "Mozzarella", price: 1.50 },
+  { name: "Olive nere", price: 1.50 },
+  { name: "Zucchine", price: 1.50 },
+  { name: "Speck", price: 1.50 },
+  { name: "Spinata", price: 1.50 },
+  { name: "Stracciatella", price: 2.50 },
+  { name: "Salsa", price: 1.00 }
+
+];
+
+async function addExtraRealtime(
+  tableNumber,
+  orderIndex,
+  itemIndex
+) {
+
+  const orders =
+    await getTableOrders(tableNumber);
+
   if (!orders) return;
 
-  const item = orders[orderIndex].items[itemIndex];
+  const item =
+    orders[orderIndex].items[itemIndex];
 
-  const extraName = prompt("Nome extra / aggiunta", "Bufala");
-  if (!extraName) return;
+  const modal =
+    document.getElementById("extrasModal");
 
-  const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
-  if (extraPriceRaw === null) return;
+  const extrasList =
+    document.getElementById("extrasList");
 
-  const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
+  const closeButton =
+    document.getElementById("closeExtrasModal");
 
-  if (isNaN(extraPrice)) {
-    alert("Prezzo non valido");
-    return;
-  }
+  const confirmButton =
+    document.getElementById("confirmExtrasButton");
 
-  item.price = Number(item.price || 0) + extraPrice;
+  modal.classList.remove("hidden");
 
-  const extraText = `+ ${extraName.trim()} €${extraPrice.toFixed(2)}`;
+  extrasList.innerHTML = "";
 
-  if (item.modification) {
-    item.modification += `\n${extraText}`;
-  } else {
-    item.modification = extraText;
-  }
+  let selectedExtras = [];
 
-  await updateTableAfterEdit(tableNumber, orders);
+  EXTRAS.forEach(extra => {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "extra-option";
+
+    div.innerHTML = `
+      <div>
+        <strong>${extra.name}</strong>
+        <br>
+        <small>
+          + €${extra.price.toFixed(2)}
+        </small>
+      </div>
+    `;
+
+    div.onclick = () => {
+
+      const alreadySelected =
+        selectedExtras.find(
+          e => e.name === extra.name
+        );
+
+      if (alreadySelected) {
+
+        selectedExtras =
+          selectedExtras.filter(
+            e => e.name !== extra.name
+          );
+
+        div.classList.remove("selected");
+
+      } else {
+
+        selectedExtras.push(extra);
+
+        div.classList.add("selected");
+      }
+    };
+
+    extrasList.appendChild(div);
+  });
+
+  closeButton.onclick = () => {
+    modal.classList.add("hidden");
+  };
+
+  confirmButton.onclick =
+    async () => {
+
+      if (selectedExtras.length === 0) {
+        modal.classList.add("hidden");
+        return;
+      }
+
+      let totalExtraPrice = 0;
+
+      let extraText = "";
+
+      selectedExtras.forEach(extra => {
+
+        totalExtraPrice += extra.price;
+
+        extraText +=
+          `+ ${extra.name} €${extra.price.toFixed(2)}\n`;
+      });
+
+      item.price =
+        Number(item.price || 0)
+        + totalExtraPrice;
+
+      if (item.modification) {
+
+        item.modification +=
+          "\n" + extraText;
+
+      } else {
+
+        item.modification =
+          extraText;
+      }
+
+      modal.classList.add("hidden");
+
+      await updateTableAfterEdit(
+        tableNumber,
+        orders
+      );
+    };
 }
 
 async function editNoteRealtime(tableNumber, orderIndex, itemIndex) {
