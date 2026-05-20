@@ -1,9 +1,9 @@
-const waiterCodes = {
-  "1111": "Marco",
-  "2222": "Luca",
-  "3333": "Admin",
-  "4444": "Isma"
-};
+const validPins = [
+  "1111",
+  "2222",
+  "3333",
+  "4444"
+];
 
 let loggedWaiter = localStorage.getItem("loggedWaiter") || "";
 
@@ -192,14 +192,20 @@ if (loggedWaiter) {
 }
 
 loginButton.addEventListener("click", () => {
-  const code = accessCodeInput.value.trim();
+  const pin = accessCodeInput.value.trim();
+  const waiterName = document.getElementById("waiterName").value.trim();
 
-  if (!waiterCodes[code]) {
-    alert("Codice non valido");
+  if (!validPins.includes(pin)) {
+    alert("PIN non valido");
     return;
   }
 
-  loggedWaiter = waiterCodes[code];
+  if (!waiterName) {
+    alert("Inserisci nome operatore");
+    return;
+  }
+
+  loggedWaiter = waiterName;
   localStorage.setItem("loggedWaiter", loggedWaiter);
   showMainApp();
 });

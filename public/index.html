@@ -1,115 +1,241 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Comande Pizzeria</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
+  <title>Comande Sala</title>
 
-  <meta name="theme-color" content="#111111" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Comande" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
+
 </head>
 
 <body>
-  <div id="loginScreen" class="app">
-    <h1>🍕 Accesso Sala</h1>
 
-    <section class="card">
+  <!-- LOGIN -->
+
+  <div id="loginScreen" class="login-screen">
+
+    <div class="login-card">
+
+      <h1>🍕 Comande Sala</h1>
+
+      <p class="login-subtitle">
+        Accesso operatore
+      </p>
+
       <input
-  id="accessCode"
-  type="password"
-  placeholder="Codice operatore"
-/>
+        type="text"
+        id="waiterName"
+        placeholder="Nome operatore"
+        autocomplete="off"
+      />
 
-<input
-  id="operatorName"
-  type="text"
-  placeholder="Nome operatore"
-/>
+      <input
+        type="password"
+        id="accessCode"
+        placeholder="PIN accesso"
+        autocomplete="off"
+      />
 
-<button id="loginButton">
-  Entra
-</button>
-    </section>
-  </div>
+      <button id="loginButton">
+        Entra
+      </button>
 
-  <div id="mainApp" class="app" style="display:none;">
-    <h1>🍕 Comande</h1>
-
-    <div id="loggedUser"></div>
-
-    <section class="card">
-      <h2>🪑 Mappa tavoli</h2>
-      <div class="legend">🟢 libero &nbsp; 🔴 occupato</div>
-      <div id="tableMap" class="table-grid"></div>
-    </section>
-
-    <section class="card">
-      <h2>Tavoli aperti</h2>
-      <div id="openTables">Caricamento tavoli...</div>
-    </section>
-
-    <section class="card">
-      <label>Tavolo</label>
-      <input id="tableNumber" type="number" placeholder="Es. 5" />
-
-      <div class="order-type">
-        <button id="newOrderBtn" class="active" type="button">Nuova comanda</button>
-        <button id="addOrderBtn" type="button">Aggiunta tavolo</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <input id="searchInput" type="text" placeholder="🔎 Cerca prodotto..." />
-    </section>
-
-    <section class="categories"></section>
-
-    <section class="card">
-      <h2>Menu</h2>
-      <div id="menu"></div>
-    </section>
-
-    <section class="card cart-card">
-      <h2>Carrello</h2>
-      <div id="cart">Nessun prodotto inserito</div>
-      <textarea id="notes" placeholder="Note generali"></textarea>
-    </section>
-
-    <div id="smartBar">
-      <div id="smartBarInfo">Nessun tavolo</div>
-      <button id="sendOrder">INVIA</button>
     </div>
+
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- APP -->
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyC2SG-OxpkqXBFK7HGCxU2rXmT0KtA8puo",
-      authDomain: "telegram-comande.firebaseapp.com",
-      projectId: "telegram-comande",
-      storageBucket: "telegram-comande.firebasestorage.app",
-      messagingSenderId: "180271164173",
-      appId: "1:180271164173:web:6aff8c8bb604131f5bde44"
-    };
+  <div
+    id="mainApp"
+    style="display:none;"
+  >
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
+    <!-- HEADER -->
+
+    <header class="topbar">
+
+      <h1>
+        🍽️ Gestione Comande
+      </h1>
+
+      <div id="loggedUser"></div>
+
+    </header>
+
+    <!-- SMART BAR -->
+
+    <section
+      class="card smart-bar"
+      id="smartBarInfo"
+    >
+      🪑 Nessun tavolo selezionato
+    </section>
+
+    <!-- MAPPA TAVOLI -->
+
+    <section class="card">
+
+      <h2>
+        🗺️ Mappa Tavoli
+      </h2>
+
+      <div id="tableMap"></div>
+
+    </section>
+
+    <!-- MODALITÀ -->
+
+    <section class="card">
+
+      <h2>
+        ⚙️ Modalità ordine
+      </h2>
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <button
+          id="newOrderBtn"
+          class="active"
+        >
+          🆕 Nuova comanda
+        </button>
+
+        <button id="addOrderBtn">
+          ➕ Aggiunta
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- DATI COMANDA -->
+
+    <section class="card">
+
+      <h2>
+        🪑 Tavolo
+      </h2>
+
+      <input
+        type="number"
+        id="tableNumber"
+        placeholder="Numero tavolo"
+      />
+
+      <textarea
+        id="notes"
+        placeholder="Note generali comanda..."
+      ></textarea>
+
+    </section>
+
+    <!-- RICERCA -->
+
+    <section class="card">
+
+      <h2>
+        🔎 Cerca prodotto
+      </h2>
+
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cerca pizza, bevanda..."
+      />
+
+    </section>
+
+    <!-- CATEGORIE -->
+
+    <section class="card">
+
+      <h2>
+        📚 Categorie
+      </h2>
+
+      <div class="categories"></div>
+
+    </section>
+
+    <!-- MENU -->
+
+    <section class="card">
+
+      <h2>
+        🍕 Menu
+      </h2>
+
+      <div id="menu"></div>
+
+    </section>
+
+    <!-- CARRELLO -->
+
+    <section class="card">
+
+      <h2>
+        🛒 Carrello
+      </h2>
+
+      <div id="cart"></div>
+
+      <button
+        id="sendOrder"
+        class="send-button"
+      >
+        🚀 Invia comanda
+      </button>
+
+    </section>
+
+    <!-- TAVOLI APERTI -->
+
+    <section class="card">
+
+      <h2>
+        🔴 Tavoli aperti
+      </h2>
+
+      <div id="openTables">
+        Caricamento tavoli...
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- FIREBASE -->
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- CONFIG -->
+
+  <script src="firebase-config.js"></script>
+
+  <!-- APP -->
 
   <script src="app.js"></script>
 
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
 </body>
+
 </html>
