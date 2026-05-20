@@ -43,6 +43,14 @@ function isNotKitchenItem(item) {
   );
 }
 
+function getCoperti(cart) {
+  const coperto = cart.find(item =>
+    (item.name || "").toLowerCase().includes("coperto")
+  );
+
+  return coperto ? coperto.quantity : 0;
+}
+
 function formatItems(items, showPrice = true) {
   return items
     .map(item => {
@@ -61,19 +69,26 @@ function formatItems(items, showPrice = true) {
 
 app.post("/send-order", async (req, res) => {
   try {
-    const { table, notes, cart, total, orderType } = req.body;
+    const { table, notes, cart, total, orderType, waiter } = req.body;
 
     const title =
       orderType === "add"
         ? "➕ AGGIUNTA TAVOLO"
         : "🍕 NUOVA COMANDA";
 
+    const coperti = getCoperti(cart);
+
     const kitchenItems = cart.filter(item => !isNotKitchenItem(item));
+
+    const tableLine = coperti > 0
+      ? `🍽️ Tavolo ${table} — 👥 Coperti: ${coperti}`
+      : `🍽️ Tavolo ${table}`;
 
     const cassaMessage = `
 ${title}
 
-🍽️ Tavolo ${table}
+${tableLine}
+👤 Cameriere: ${waiter || "N/D"}
 
 ${formatItems(cart, true)}
 
@@ -87,7 +102,8 @@ ${notes ? `📝 Note:\n${notes}` : ""}
     const pizzeriaMessage = `
 ${title}
 
-🍽️ Tavolo ${table}
+${tableLine}
+👤 Cameriere: ${waiter || "N/D"}
 
 ${kitchenItems.length > 0 ? formatItems(kitchenItems, false) : "⚠️ Nessun prodotto cucina riconosciuto"}
 
