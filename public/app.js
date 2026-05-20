@@ -392,7 +392,7 @@ function addExtra(index) {
     div.innerHTML = `
       <div>
         <strong>${extra.name}</strong><br>
-        <small>+ €${extra.price.toFixed(2)}</small>
+        <small>+ €${Number(extra.price || 0).toFixed(2)}</small>
       </div>
     `;
 
@@ -421,18 +421,55 @@ function addExtra(index) {
       return;
     }
 
-    if (!item.extras) {
-      item.extras = [];
-    }
+    const extraTotal = selectedExtras.reduce((sum, extra) => {
+      return sum + Number(extra.price || 0);
+    }, 0);
 
-    selectedExtras.forEach(extra => {
-      item.extras.push({
-        name: extra.name,
-        price: extra.price
+    const extraText = selectedExtras
+      .map(extra => `+ ${extra.name}`)
+      .join("\n");
+
+    const applyToAll =
+      Number(item.quantity || 1) <= 1
+        ? true
+        : confirm(`Applicare gli extra a tutte le ${item.quantity} pizze?`);
+
+    if (!applyToAll && Number(item.quantity || 1) > 1) {
+      item.quantity = Number(item.quantity || 1) - 1;
+
+      const newItem = {
+        ...item,
+        quantity: 1,
+        price: Number(item.price || 0) + extraTotal,
+        extras: [
+          ...(item.extras || []),
+          ...selectedExtras.map(extra => ({
+            name: extra.name,
+            price: Number(extra.price || 0)
+          }))
+        ],
+        modification: item.modification
+          ? `${item.modification}\n${extraText}`
+          : extraText
+      };
+
+      cart.splice(index + 1, 0, newItem);
+    } else {
+      if (!item.extras) item.extras = [];
+
+      selectedExtras.forEach(extra => {
+        item.extras.push({
+          name: extra.name,
+          price: Number(extra.price || 0)
+        });
       });
 
-      item.price = Number(item.price || 0) + Number(extra.price || 0);
-    });
+      item.price = Number(item.price || 0) + extraTotal;
+
+      item.modification = item.modification
+        ? `${item.modification}\n${extraText}`
+        : extraText;
+    }
 
     modal.classList.add("hidden");
     renderCart();
