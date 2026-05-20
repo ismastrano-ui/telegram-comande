@@ -3,6 +3,7 @@ const cashierOpenTablesDiv = document.getElementById("cashierOpenTables");
 const cashierClosedTablesDiv = document.getElementById("cashierClosedTables");
 const clearDayButton = document.getElementById("clearDayButton");
 const refreshButton = document.getElementById("refreshButton");
+const backupButton = document.getElementById("backupButton");
 
 function isToday(dateString) {
   if (!dateString) return false;
