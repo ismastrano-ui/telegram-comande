@@ -159,7 +159,6 @@ const categoriesDiv = document.querySelector(".categories");
 const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
-const closedTablesDiv = document.getElementById("closedTables");
 const smartBarInfo = document.getElementById("smartBarInfo");
 
 function showMainApp() {
@@ -178,7 +177,6 @@ function showMainApp() {
   renderCart();
   loadOpenTables();
   renderTableMap();
-  loadClosedTables();
 }
 
 function logoutWaiter() {
@@ -210,17 +208,27 @@ function getElapsedTime(openedAt) {
 
   const opened = new Date(openedAt);
   const now = new Date();
-  const diffMs = now - opened;
-  const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
-
+  const diffMinutes = Math.max(0, Math.floor((now - opened) / 60000));
   const hours = Math.floor(diffMinutes / 60);
   const minutes = diffMinutes % 60;
 
-  if (hours <= 0) {
-    return `${minutes}m`;
-  }
-
+  if (hours <= 0) return `${minutes}m`;
   return `${hours}h ${minutes}m`;
+}
+
+function getCopertiFromOrders(orders) {
+  let coperti = 0;
+
+  (orders || []).forEach(order => {
+    (order.items || []).forEach(item => {
+      const name = String(item.name || "").toLowerCase();
+      if (name.includes("coperto")) {
+        coperti += Number(item.quantity || 0);
+      }
+    });
+  });
+
+  return coperti;
 }
 
 function renderCategories() {
@@ -286,7 +294,7 @@ function renderMenu() {
     `;
 
     const button = document.createElement("button");
-    button.textContent = "➕ Aggiungi";
+    button.textContent = "➕";
     button.onclick = () => addToCart(item.name, item.price, item.category);
 
     row.appendChild(info);
@@ -394,14 +402,14 @@ function renderCart() {
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button onclick="decreaseItem(${index})">➖</button>
           <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.category.replace(/'/g, "\\'")}')">➕</button>
-          <button onclick="editModification(${index})">✏️ Note</button>
+          <button onclick="editModification(${index})">✏️</button>
           <button onclick="removeItem(${index})">🗑️</button>
         </div>
       </div>
     `;
   });
 
-  cartDiv.innerHTML += `<hr><strong>Totale: €${total.toFixed(2)}</strong>`;
+  cartDiv.innerHTML += `<hr><strong>Totale carrello: €${total.toFixed(2)}</strong>`;
   updateSmartBar(total, totalItems);
 }
 
@@ -472,13 +480,19 @@ async function loadOpenTables() {
 
   snapshot.forEach(doc => {
     const table = doc.data();
+    const orders = table.orders || [];
+    const coperti = getCopertiFromOrders(orders);
+    const lastOrder = orders[orders.length - 1];
+    const waiter = lastOrder?.waiter || "N/D";
 
     const tableCard = document.createElement("div");
     tableCard.className = "menu-item";
 
     tableCard.innerHTML = `
       <span>
-        🔴 Tavolo ${table.tableNumber}<br>
+        🔴 Tavolo ${table.tableNumber}
+        ${coperti > 0 ? `— 👥 ${coperti}` : ""}<br>
+        👤 ${waiter}<br>
         <strong>€${Number(table.total || 0).toFixed(2)}</strong><br>
         <small>⏱️ aperto da ${getElapsedTime(table.openedAt)}</small>
       </span>
@@ -494,67 +508,6 @@ async function loadOpenTables() {
   });
 }
 
-async function loadClosedTables() {
-  if (!closedTablesDiv) return;
-
-  closedTablesDiv.innerHTML = "Caricamento tavoli chiusi...";
-
-  const snapshot = await db
-    .collection("tables")
-    .where("status", "==", "closed")
-    .get();
-
-  const closedTodayTables = [];
-
-  snapshot.forEach(doc => {
-    const table = doc.data();
-
-    if (isToday(table.closedAt)) {
-      closedTodayTables.push({
-        id: doc.id,
-        ...table
-      });
-    }
-  });
-
-  if (closedTodayTables.length === 0) {
-    closedTablesDiv.innerHTML = "Nessun tavolo chiuso oggi";
-    return;
-  }
-
-  closedTodayTables.sort((a, b) => {
-    return new Date(b.closedAt) - new Date(a.closedAt);
-  });
-
-  closedTablesDiv.innerHTML = "";
-
-  closedTodayTables.forEach(table => {
-    const closedTime = new Date(table.closedAt).toLocaleTimeString("it-IT", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-    const tableCard = document.createElement("div");
-    tableCard.className = "menu-item";
-
-    tableCard.innerHTML = `
-      <span>
-        ✅ Tavolo ${table.tableNumber}<br>
-        <small>Chiuso alle ${closedTime}</small><br>
-        <strong>€${Number(table.total || 0).toFixed(2)}</strong>
-      </span>
-
-      <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <button onclick="showTableHistory('${table.tableNumber}')">
-          📜 Dettaglio
-        </button>
-      </div>
-    `;
-
-    closedTablesDiv.appendChild(tableCard);
-  });
-}
-
 function selectTable(tableNumber) {
   document.getElementById("tableNumber").value = tableNumber;
 
@@ -567,13 +520,17 @@ function selectTable(tableNumber) {
 
 function buildTableSummary(tableNumber, table) {
   const orders = table.orders || [];
-  let summary = `TAVOLO ${tableNumber}\n\n`;
+  const coperti = getCopertiFromOrders(orders);
+
+  let summary = `TAVOLO ${tableNumber}`;
+  if (coperti > 0) summary += ` — ${coperti} coperti`;
+  summary += `\n\n`;
 
   orders.forEach((order, index) => {
     summary += `ORDINE ${index + 1} - ${order.type === "add" ? "Aggiunta" : "Nuova comanda"}\n`;
     summary += `👤 Cameriere: ${order.waiter || "N/D"}\n`;
 
-    order.items.forEach(item => {
+    (order.items || []).forEach(item => {
       summary += `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}\n`;
 
       if (item.modification) {
@@ -601,8 +558,20 @@ async function showTableHistory(tableNumber) {
     return;
   }
 
-  const table = doc.data();
-  alert(buildTableSummary(tableNumber, table));
+  alert(buildTableSummary(tableNumber, doc.data()));
+}
+
+async function archiveAndCloseTable(tableNumber, table) {
+  const closedAt = new Date().toISOString();
+
+  await db.collection("closedTables").add({
+    ...table,
+    tableNumber: tableNumber,
+    status: "closed",
+    closedAt: closedAt
+  });
+
+  await db.collection("tables").doc(tableNumber).delete();
 }
 
 async function closeTable(tableNumber) {
@@ -641,32 +610,12 @@ async function closeTable(tableNumber) {
     return;
   }
 
-  await db
-    .collection("tables")
-    .doc(tableNumber)
-    .update({
-      status: "closed",
-      closedAt: new Date().toISOString()
-    });
+  await archiveAndCloseTable(tableNumber, table);
 
   alert(`Tavolo ${tableNumber} chiuso correttamente ✅`);
 
   loadOpenTables();
   renderTableMap();
-  loadClosedTables();
-}
-
-function isToday(dateString) {
-  if (!dateString) return false;
-
-  const date = new Date(dateString);
-  const today = new Date();
-
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
 }
 
 const newOrderBtn = document.getElementById("newOrderBtn");
@@ -737,7 +686,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     let existingOrders = [];
     let openedAt = new Date().toISOString();
 
-    if (existingDoc.exists) {
+    if (existingDoc.exists && existingDoc.data().status === "open") {
       existingOrders = existingDoc.data().orders || [];
       openedAt = existingDoc.data().openedAt || openedAt;
     }
@@ -778,7 +727,6 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     renderCart();
     loadOpenTables();
     renderTableMap();
-    loadClosedTables();
 
   } else {
     alert("Errore durante l'invio dell'ordine");
