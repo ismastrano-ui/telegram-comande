@@ -373,57 +373,68 @@ function addExtra(index) {
 
   if (!item) return;
 
-  if (item.quantity > 1) {
-    const applyAll = confirm(
-      `Questo prodotto ha quantità ${item.quantity}.\n\nVuoi applicare l'extra a tutti i pezzi?\n\nOK = a tutti\nAnnulla = solo a 1 pezzo`
-    );
+  const modal = document.getElementById("extrasModal");
+  const extrasList = document.getElementById("extrasList");
+  const closeButton = document.getElementById("closeExtrasModal");
+  const confirmButton = document.getElementById("confirmExtrasButton");
 
-    if (!applyAll) {
-      item.quantity -= 1;
+  modal.classList.remove("hidden");
+  extrasList.innerHTML = "";
 
-      cart.push({
-        name: item.name,
-        basePrice: item.basePrice || item.price,
-        price: item.basePrice || item.price,
-        category: item.category,
-        quantity: 1,
-        modification: item.modification || "",
-        extras: []
-      });
+  let selectedExtras = [];
 
-      renderCart();
-      addExtra(cart.length - 1);
-      return;
-    }
-  }
+  EXTRAS.forEach(extra => {
+    const div = document.createElement("div");
+    div.className = "extra-option";
 
-  const extraName = prompt("Nome extra / aggiunta", "Bufala");
+    div.innerHTML = `
+      <div>
+        <strong>${extra.name}</strong><br>
+        <small>+ €${extra.price.toFixed(2)}</small>
+      </div>
+    `;
 
-  if (!extraName) return;
+    div.onclick = () => {
+      const alreadySelected = selectedExtras.find(e => e.name === extra.name);
 
-  const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
+      if (alreadySelected) {
+        selectedExtras = selectedExtras.filter(e => e.name !== extra.name);
+        div.classList.remove("selected");
+      } else {
+        selectedExtras.push(extra);
+        div.classList.add("selected");
+      }
+    };
 
-  if (extraPriceRaw === null) return;
-
-  const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
-
-  if (isNaN(extraPrice)) {
-    alert("Prezzo non valido");
-    return;
-  }
-
-  if (!item.extras) {
-    item.extras = [];
-  }
-
-  item.extras.push({
-    name: extraName.trim(),
-    price: extraPrice
+    extrasList.appendChild(div);
   });
 
-  item.price = Number(item.price || 0) + extraPrice;
+  closeButton.onclick = () => {
+    modal.classList.add("hidden");
+  };
 
-  renderCart();
+  confirmButton.onclick = () => {
+    if (selectedExtras.length === 0) {
+      modal.classList.add("hidden");
+      return;
+    }
+
+    if (!item.extras) {
+      item.extras = [];
+    }
+
+    selectedExtras.forEach(extra => {
+      item.extras.push({
+        name: extra.name,
+        price: extra.price
+      });
+
+      item.price = Number(item.price || 0) + Number(extra.price || 0);
+    });
+
+    modal.classList.add("hidden");
+    renderCart();
+  };
 }
 
 function removeExtra(itemIndex, extraIndex) {
