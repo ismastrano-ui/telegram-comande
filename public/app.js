@@ -162,14 +162,24 @@ const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
 const smartBarInfo = document.getElementById("smartBarInfo");
 
-function showMainApp() {
+async function showMainApp() {
+
   loginScreen.style.display = "none";
+
   mainApp.style.display = "block";
+
+  await loadExtras();
 
   loggedUserDiv.innerHTML = `
     <section class="card">
       👤 Operatore: <strong>${loggedWaiter}</strong>
-      <button onclick="logoutWaiter()" style="margin-top:10px;">Esci</button>
+
+      <button
+        onclick="logoutWaiter()"
+        style="margin-top:10px;"
+      >
+        Esci
+      </button>
     </section>
   `;
 
