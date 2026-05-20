@@ -1,7 +1,8 @@
 const waiterCodes = {
   "1111": "Marco",
   "2222": "Luca",
-  "3333": "Admin"
+  "3333": "Admin",
+  "4444": "Isma"
 };
 
 let loggedWaiter = localStorage.getItem("loggedWaiter") || "";
@@ -222,6 +223,7 @@ function getCopertiFromOrders(orders) {
   (orders || []).forEach(order => {
     (order.items || []).forEach(item => {
       const name = String(item.name || "").toLowerCase();
+
       if (name.includes("coperto")) {
         coperti += Number(item.quantity || 0);
       }
@@ -229,6 +231,18 @@ function getCopertiFromOrders(orders) {
   });
 
   return coperti;
+}
+
+function recalculateOrderTotal(order) {
+  return (order.items || []).reduce((sum, item) => {
+    return sum + Number(item.price || 0) * Number(item.quantity || 0);
+  }, 0);
+}
+
+function recalculateTableTotal(orders) {
+  return (orders || []).reduce((sum, order) => {
+    return sum + Number(order.total || 0);
+  }, 0);
 }
 
 function renderCategories() {
@@ -372,9 +386,7 @@ function addExtra(index) {
       });
 
       renderCart();
-
-      const newIndex = cart.length - 1;
-      addExtra(newIndex);
+      addExtra(cart.length - 1);
       return;
     }
   }
@@ -387,9 +399,7 @@ function addExtra(index) {
 
   if (extraPriceRaw === null) return;
 
-  const extraPrice = Number(
-    String(extraPriceRaw).replace(",", ".")
-  );
+  const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
 
   if (isNaN(extraPrice)) {
     alert("Prezzo non valido");
@@ -438,22 +448,16 @@ function removeItem(index) {
   renderCart();
 }
 
-function getExtrasText(item, html = true) {
+function getExtrasText(item, itemIndex) {
   if (!item.extras || item.extras.length === 0) return "";
 
-  if (html) {
-    return item.extras
-      .map((extra, extraIndex) => {
-        return `<br><em>➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
-          <button onclick="removeExtra(${cart.indexOf(item)}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
-        </em>`;
-      })
-      .join("");
-  }
-
   return item.extras
-    .map(extra => `+ ${extra.name} €${Number(extra.price || 0).toFixed(2)}`)
-    .join("\n");
+    .map((extra, extraIndex) => {
+      return `<br><em>➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
+        <button onclick="removeExtra(${itemIndex}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
+      </em>`;
+    })
+    .join("");
 }
 
 function buildCombinedModification(item) {
@@ -494,11 +498,11 @@ function renderCart() {
   cartDiv.innerHTML = "";
 
   cart.forEach((item, index) => {
-    const lineTotal = item.price * item.quantity;
+    const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
     total += lineTotal;
-    totalItems += item.quantity;
+    totalItems += Number(item.quantity || 0);
 
-    const extrasText = getExtrasText(item, true);
+    const extrasText = getExtrasText(item, index);
 
     const modificationText = item.modification
       ? `<br><em>✏️ ${item.modification}</em>`
@@ -617,6 +621,7 @@ async function loadOpenTables() {
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <button onclick="selectTable('${table.tableNumber}')">➕ Aggiunta</button>
         <button onclick="showTableHistory('${table.tableNumber}')">📜 Storico</button>
+        <button onclick="editTable('${table.tableNumber}')">✏️ Modifica</button>
         <button onclick="closeTable('${table.tableNumber}')">💰 Chiudi</button>
       </div>
     `;
@@ -648,7 +653,7 @@ function buildTableSummary(tableNumber, table) {
     summary += `👤 Cameriere: ${order.waiter || "N/D"}\n`;
 
     (order.items || []).forEach(item => {
-      summary += `${item.quantity} x ${item.name} - €${(item.price * item.quantity).toFixed(2)}\n`;
+      summary += `${item.quantity} x ${item.name} - €${(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}\n`;
 
       if (item.modification) {
         summary += `   ✏️ ${item.modification}\n`;
@@ -676,6 +681,177 @@ async function showTableHistory(tableNumber) {
   }
 
   alert(buildTableSummary(tableNumber, doc.data()));
+}
+
+function buildEditableTableText(tableNumber, table) {
+  const orders = table.orders || [];
+  let text = `✏️ MODIFICA TAVOLO ${tableNumber}\n\n`;
+
+  orders.forEach((order, orderIndex) => {
+    text += `ORDINE ${orderIndex + 1} - ${order.type === "add" ? "Aggiunta" : "Nuova comanda"}\n`;
+    text += `👤 ${order.waiter || "N/D"}\n\n`;
+
+    (order.items || []).forEach((item, itemIndex) => {
+      text += `[${orderIndex}-${itemIndex}] ${item.quantity} x ${item.name} - €${(Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2)}\n`;
+
+      if (item.modification) {
+        text += `✏️ ${item.modification}\n`;
+      }
+
+      text += "\n";
+    });
+
+    text += "--------------------\n\n";
+  });
+
+  text += "Scrivi il codice riga da modificare, es. 0-1";
+
+  return text;
+}
+
+async function editTable(tableNumber) {
+  const tableRef = db.collection("tables").doc(tableNumber);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) {
+    alert("Tavolo non trovato");
+    return;
+  }
+
+  const table = doc.data();
+  const orders = table.orders || [];
+
+  if (orders.length === 0) {
+    alert("Nessun ordine da modificare");
+    return;
+  }
+
+  const selected = prompt(buildEditableTableText(tableNumber, table));
+
+  if (!selected) return;
+
+  const parts = selected.split("-");
+
+  if (parts.length !== 2) {
+    alert("Formato non valido. Esempio corretto: 0-1");
+    return;
+  }
+
+  const orderIndex = Number(parts[0]);
+  const itemIndex = Number(parts[1]);
+
+  if (
+    isNaN(orderIndex) ||
+    isNaN(itemIndex) ||
+    !orders[orderIndex] ||
+    !orders[orderIndex].items ||
+    !orders[orderIndex].items[itemIndex]
+  ) {
+    alert("Riga non trovata");
+    return;
+  }
+
+  const item = orders[orderIndex].items[itemIndex];
+
+  const action = prompt(
+    `Modifica: ${item.quantity} x ${item.name}\n\n` +
+    `1 = Aumenta quantità\n` +
+    `2 = Diminuisci quantità\n` +
+    `3 = Elimina prodotto\n` +
+    `4 = Aggiungi extra/prezzo\n` +
+    `5 = Modifica nota\n\n` +
+    `Scrivi il numero dell'azione:`
+  );
+
+  if (!action) return;
+
+  if (action === "1") {
+    item.quantity = Number(item.quantity || 0) + 1;
+  }
+
+  else if (action === "2") {
+    item.quantity = Number(item.quantity || 0) - 1;
+
+    if (item.quantity <= 0) {
+      const confirmDelete = confirm("Quantità arrivata a zero. Eliminare prodotto?");
+      if (confirmDelete) {
+        orders[orderIndex].items.splice(itemIndex, 1);
+      } else {
+        item.quantity = 1;
+      }
+    }
+  }
+
+  else if (action === "3") {
+    const confirmDelete = confirm(`Eliminare ${item.name} dalla comanda?`);
+    if (!confirmDelete) return;
+
+    orders[orderIndex].items.splice(itemIndex, 1);
+  }
+
+  else if (action === "4") {
+    const extraName = prompt("Nome extra / aggiunta", "Bufala");
+    if (!extraName) return;
+
+    const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
+    if (extraPriceRaw === null) return;
+
+    const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
+
+    if (isNaN(extraPrice)) {
+      alert("Prezzo non valido");
+      return;
+    }
+
+    item.price = Number(item.price || 0) + extraPrice;
+
+    const extraText = `+ ${extraName.trim()} €${extraPrice.toFixed(2)}`;
+
+    if (item.modification) {
+      item.modification += `\n${extraText}`;
+    } else {
+      item.modification = extraText;
+    }
+  }
+
+  else if (action === "5") {
+    const newNote = prompt("Nuova nota prodotto", item.modification || "");
+
+    if (newNote !== null) {
+      item.modification = newNote.trim();
+    }
+  }
+
+  else {
+    alert("Azione non valida");
+    return;
+  }
+
+  orders[orderIndex].items = (orders[orderIndex].items || []).filter(item => {
+    return Number(item.quantity || 0) > 0;
+  });
+
+  orders[orderIndex].total = recalculateOrderTotal(orders[orderIndex]);
+  orders[orderIndex].kitchenDone = false;
+  orders[orderIndex].modifiedAt = new Date().toISOString();
+  orders[orderIndex].modifiedBy = loggedWaiter || "N/D";
+
+  const cleanedOrders = orders.filter(order => {
+    return (order.items || []).length > 0;
+  });
+
+  const updatedTotal = recalculateTableTotal(cleanedOrders);
+
+  await tableRef.update({
+    orders: cleanedOrders,
+    total: updatedTotal,
+    updatedAt: new Date().toISOString()
+  });
+
+  alert("Comanda modificata correttamente ✅");
+
+  loadOpenTables();
+  renderTableMap();
 }
 
 async function archiveAndCloseTable(tableNumber, table) {
@@ -781,7 +957,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
   }));
 
   const total = cartForSend.reduce((sum, item) => {
-    return sum + item.price * item.quantity;
+    return sum + Number(item.price || 0) * Number(item.quantity || 0);
   }, 0);
 
   const response = await fetch("/send-order", {
@@ -819,7 +995,8 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
       createdAt: new Date().toISOString(),
       items: cartForSend.map(item => ({ ...item })),
       notes: notes,
-      total: total
+      total: total,
+      kitchenDone: false
     };
 
     const updatedOrders = [...existingOrders, newOrder];
