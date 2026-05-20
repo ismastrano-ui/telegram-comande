@@ -188,7 +188,8 @@ function logoutWaiter() {
 }
 
 if (loggedWaiter) {
-  showMainApp();
+  await loadExtras();
+showMainApp();
 }
 
 loginButton.addEventListener("click", () => {
@@ -975,33 +976,35 @@ async function deleteItemRealtime(tableNumber, orderIndex, itemIndex) {
   await updateTableAfterEdit(tableNumber, orders);
 }
 
-const EXTRAS = [
-  { name: "Fiordilatte", price: 1.50 },
-  { name: "Bufala", price: 2.00 },
-  { name: "Gorgonzola", price: 2.00 },
-  { name: "Provola affumicata", price: 2.50 },
-  { name: "Polpa", price: 1.00 },
-  { name: "Pomodorini", price: 1.50 },
-  { name: "Alici", price: 1.50 },
-  { name: "Cipolletta", price: 1.00 },
-  { name: "Cipolla caramellata", price: 1.50 },
-  { name: "Friarielli", price: 1.50 },
-  { name: "Funghi", price: 1.50 },
-  { name: "Porcini", price: 3.00 },
-  { name: "Uovo", price: 1.00 },
-  { name: "Olive", price: 1.00 },
-  { name: "Capuliato di pomodoro secco", price: 2.00 },
-  { name: "Grana", price: 1.00 },
-  { name: "Ricotta salata", price: 1.00 },
-  { name: "Burrata", price: 3.00 },
-  { name: "Cotto di Praga", price: 2.00 },
-  { name: "Crudo", price: 2.50 },
-  { name: "Coppa", price: 2.50 },
-  { name: "Spianata piccante", price: 2.00 },
-  { name: "Speck", price: 1.50 },
-  { name: "Salsiccia", price: 2.00 },
-  { name: "Guanciale", price: 2.00 }
-];
+let EXTRAS = [];
+
+async function loadExtras() {
+
+  try {
+
+    const snapshot = await db
+      .collection("extras")
+      .where("active", "==", true)
+      .get();
+
+    EXTRAS = [];
+
+    snapshot.forEach(doc => {
+
+      EXTRAS.push(doc.data());
+
+    });
+
+    console.log("Extra caricati:", EXTRAS);
+
+  } catch (error) {
+
+    console.error(
+      "Errore caricamento extra:",
+      error
+    );
+  }
+}
 async function addExtraRealtime(
   tableNumber,
   orderIndex,
