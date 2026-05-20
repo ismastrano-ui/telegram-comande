@@ -514,3 +514,62 @@ hr {
   font-size: 18px;
   padding: 14px;
 }
+/* OTTIMIZZAZIONE PIZZERIA MOBILE/TABLET */
+
+.kitchen-card {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+}
+
+.kitchen-topbar {
+  margin-bottom: 8px;
+}
+
+.kitchen-table {
+  font-size: 19px;
+}
+
+.kitchen-meta {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.kitchen-timer {
+  padding: 6px 8px;
+  font-size: 14px;
+}
+
+.kitchen-section {
+  margin-top: 8px;
+}
+
+.kitchen-section h3 {
+  font-size: 15px;
+  margin: 5px 0;
+}
+
+.kitchen-item {
+  padding: 8px 9px;
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.kitchen-note {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.done-button {
+  margin-top: 8px;
+  padding: 11px;
+  font-size: 16px;
+}
+
+@media (min-width: 700px) {
+  #kitchenOrders {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
