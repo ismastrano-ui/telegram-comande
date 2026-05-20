@@ -190,7 +190,6 @@ function logoutWaiter() {
 }
 
 if (loggedWaiter) {
-await loadExtras();
 showMainApp();
 }
 
