@@ -716,135 +716,186 @@ function buildEditableTableText(tableNumber, table) {
 }
 
 async function editTable(tableNumber) {
-  const tableRef = db.collection("tables").doc(tableNumber);
-  const doc = await tableRef.get();
+
+  const modal =
+    document.getElementById("editModal");
+
+  const modalTitle =
+    document.getElementById("editModalTitle");
+
+  const modalBody =
+    document.getElementById("editModalBody");
+
+  const closeButton =
+    document.getElementById("closeEditModal");
+
+  modal.classList.remove("hidden");
+
+  modalTitle.innerHTML =
+    `✏️ Modifica Tavolo ${tableNumber}`;
+
+  closeButton.onclick = () => {
+    modal.classList.add("hidden");
+  };
+
+  const tableRef =
+    db.collection("tables").doc(tableNumber);
+
+  const doc =
+    await tableRef.get();
 
   if (!doc.exists) {
-    alert("Tavolo non trovato");
+
+    modalBody.innerHTML =
+      "Tavolo non trovato";
+
     return;
   }
 
-  const table = doc.data();
-  const orders = table.orders || [];
+  const table =
+    doc.data();
+
+  const orders =
+    table.orders || [];
 
   if (orders.length === 0) {
-    alert("Nessun ordine da modificare");
+
+    modalBody.innerHTML =
+      "Nessuna comanda";
+
     return;
   }
 
-  const selected = prompt(buildEditableTableText(tableNumber, table));
+  modalBody.innerHTML = "";
 
-  if (!selected) return;
+  orders.forEach((order, orderIndex) => {
 
-  const parts = selected.split("-");
+    const orderDiv =
+      document.createElement("div");
 
-  if (parts.length !== 2) {
-    alert("Formato non valido. Esempio corretto: 0-1");
-    return;
-  }
+    orderDiv.className =
+      "edit-order-block";
 
-  const orderIndex = Number(parts[0]);
-  const itemIndex = Number(parts[1]);
+    orderDiv.innerHTML = `
+      <strong>
+        ${
+          order.type === "add"
+            ? "➕ Aggiunta"
+            : "🆕 Nuova comanda"
+        }
+      </strong>
+      <br>
+      👤 ${order.waiter || "N/D"}
+    `;
 
-  if (
-    isNaN(orderIndex) ||
-    isNaN(itemIndex) ||
-    !orders[orderIndex] ||
-    !orders[orderIndex].items ||
-    !orders[orderIndex].items[itemIndex]
-  ) {
-    alert("Riga non trovata");
-    return;
-  }
+    (order.items || []).forEach((item, itemIndex) => {
 
-  const item = orders[orderIndex].items[itemIndex];
+      const itemDiv =
+        document.createElement("div");
 
-  const action = prompt(
-    `Modifica: ${item.quantity} x ${item.name}\n\n` +
-    `1 = Aumenta quantità\n` +
-    `2 = Diminuisci quantità\n` +
-    `3 = Elimina prodotto\n` +
-    `4 = Aggiungi extra/prezzo\n` +
-    `5 = Modifica nota\n\n` +
-    `Scrivi il numero dell'azione:`
-  );
+      itemDiv.className =
+        "edit-item";
 
-  if (!action) return;
+      itemDiv.innerHTML = `
 
-  if (action === "1") {
-    item.quantity = Number(item.quantity || 0) + 1;
-  }
+        <strong>
+          ${item.quantity} x ${item.name}
+        </strong>
 
-  else if (action === "2") {
-    item.quantity = Number(item.quantity || 0) - 1;
+        <br>
 
-    if (item.quantity <= 0) {
-      const confirmDelete = confirm("Quantità arrivata a zero. Eliminare prodotto?");
-      if (confirmDelete) {
-        orders[orderIndex].items.splice(itemIndex, 1);
-      } else {
-        item.quantity = 1;
-      }
-    }
-  }
+        <small>
+          €${(
+            Number(item.price || 0) *
+            Number(item.quantity || 0)
+          ).toFixed(2)}
+        </small>
 
-  else if (action === "3") {
-    const confirmDelete = confirm(`Eliminare ${item.name} dalla comanda?`);
-    if (!confirmDelete) return;
+        ${
+          item.modification
+            ? `
+              <br>
+              <em>
+                ✏️ ${item.modification}
+              </em>
+            `
+            : ""
+        }
 
-    orders[orderIndex].items.splice(itemIndex, 1);
-  }
+        <div class="edit-actions">
 
-  else if (action === "4") {
-    const extraName = prompt("Nome extra / aggiunta", "Bufala");
-    if (!extraName) return;
+          <button
+            onclick="increaseItemRealtime(
+              '${tableNumber}',
+              ${orderIndex},
+              ${itemIndex}
+            )"
+          >
+            ➕
+          </button>
 
-    const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
-    if (extraPriceRaw === null) return;
+          <button
+            onclick="decreaseItemRealtime(
+              '${tableNumber}',
+              ${orderIndex},
+              ${itemIndex}
+            )"
+          >
+            ➖
+          </button>
 
-    const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
+          <button
+            onclick="deleteItemRealtime(
+              '${tableNumber}',
+              ${orderIndex},
+              ${itemIndex}
+            )"
+          >
+            🗑️
+          </button>
 
-    if (isNaN(extraPrice)) {
-      alert("Prezzo non valido");
-      return;
-    }
+          <button
+            onclick="addExtraRealtime(
+              '${tableNumber}',
+              ${orderIndex},
+              ${itemIndex}
+            )"
+          >
+            ➕ Extra
+          </button>
 
-    item.price = Number(item.price || 0) + extraPrice;
+          <button
+            onclick="editNoteRealtime(
+              '${tableNumber}',
+              ${orderIndex},
+              ${itemIndex}
+            )"
+          >
+            ✏️ Nota
+          </button>
 
-    const extraText = `+ ${extraName.trim()} €${extraPrice.toFixed(2)}`;
+        </div>
+      `;
 
-    if (item.modification) {
-      item.modification += `\n${extraText}`;
-    } else {
-      item.modification = extraText;
-    }
-  }
+      orderDiv.appendChild(itemDiv);
+    });
 
-  else if (action === "5") {
-    const newNote = prompt("Nuova nota prodotto", item.modification || "");
-
-    if (newNote !== null) {
-      item.modification = newNote.trim();
-    }
-  }
-
-  else {
-    alert("Azione non valida");
-    return;
-  }
-
-  orders[orderIndex].items = (orders[orderIndex].items || []).filter(item => {
-    return Number(item.quantity || 0) > 0;
+    modalBody.appendChild(orderDiv);
   });
+}
+async function updateTableAfterEdit(tableNumber, orders) {
+  const tableRef = db.collection("tables").doc(tableNumber);
 
-  orders[orderIndex].total = recalculateOrderTotal(orders[orderIndex]);
-  orders[orderIndex].kitchenDone = false;
-  orders[orderIndex].modifiedAt = new Date().toISOString();
-  orders[orderIndex].modifiedBy = loggedWaiter || "N/D";
-
-  const cleanedOrders = orders.filter(order => {
-    return (order.items || []).length > 0;
-  });
+  const cleanedOrders = orders
+    .map(order => {
+      order.items = (order.items || []).filter(item => Number(item.quantity || 0) > 0);
+      order.total = recalculateOrderTotal(order);
+      order.kitchenDone = false;
+      order.modifiedAt = new Date().toISOString();
+      order.modifiedBy = loggedWaiter || "N/D";
+      return order;
+    })
+    .filter(order => (order.items || []).length > 0);
 
   const updatedTotal = recalculateTableTotal(cleanedOrders);
 
@@ -854,12 +905,111 @@ async function editTable(tableNumber) {
     updatedAt: new Date().toISOString()
   });
 
-  alert("Comanda modificata correttamente ✅");
-
   loadOpenTables();
   renderTableMap();
+  editTable(tableNumber);
 }
 
+async function getTableOrders(tableNumber) {
+  const tableRef = db.collection("tables").doc(tableNumber);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) {
+    alert("Tavolo non trovato");
+    return null;
+  }
+
+  return doc.data().orders || [];
+}
+
+async function increaseItemRealtime(tableNumber, orderIndex, itemIndex) {
+  const orders = await getTableOrders(tableNumber);
+  if (!orders) return;
+
+  orders[orderIndex].items[itemIndex].quantity =
+    Number(orders[orderIndex].items[itemIndex].quantity || 0) + 1;
+
+  await updateTableAfterEdit(tableNumber, orders);
+}
+
+async function decreaseItemRealtime(tableNumber, orderIndex, itemIndex) {
+  const orders = await getTableOrders(tableNumber);
+  if (!orders) return;
+
+  const item = orders[orderIndex].items[itemIndex];
+
+  item.quantity = Number(item.quantity || 0) - 1;
+
+  if (item.quantity <= 0) {
+    const confirmDelete = confirm("Quantità a zero. Eliminare il prodotto?");
+    if (confirmDelete) {
+      orders[orderIndex].items.splice(itemIndex, 1);
+    } else {
+      item.quantity = 1;
+    }
+  }
+
+  await updateTableAfterEdit(tableNumber, orders);
+}
+
+async function deleteItemRealtime(tableNumber, orderIndex, itemIndex) {
+  const confirmDelete = confirm("Eliminare questo prodotto?");
+  if (!confirmDelete) return;
+
+  const orders = await getTableOrders(tableNumber);
+  if (!orders) return;
+
+  orders[orderIndex].items.splice(itemIndex, 1);
+
+  await updateTableAfterEdit(tableNumber, orders);
+}
+
+async function addExtraRealtime(tableNumber, orderIndex, itemIndex) {
+  const orders = await getTableOrders(tableNumber);
+  if (!orders) return;
+
+  const item = orders[orderIndex].items[itemIndex];
+
+  const extraName = prompt("Nome extra / aggiunta", "Bufala");
+  if (!extraName) return;
+
+  const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
+  if (extraPriceRaw === null) return;
+
+  const extraPrice = Number(String(extraPriceRaw).replace(",", "."));
+
+  if (isNaN(extraPrice)) {
+    alert("Prezzo non valido");
+    return;
+  }
+
+  item.price = Number(item.price || 0) + extraPrice;
+
+  const extraText = `+ ${extraName.trim()} €${extraPrice.toFixed(2)}`;
+
+  if (item.modification) {
+    item.modification += `\n${extraText}`;
+  } else {
+    item.modification = extraText;
+  }
+
+  await updateTableAfterEdit(tableNumber, orders);
+}
+
+async function editNoteRealtime(tableNumber, orderIndex, itemIndex) {
+  const orders = await getTableOrders(tableNumber);
+  if (!orders) return;
+
+  const item = orders[orderIndex].items[itemIndex];
+
+  const newNote = prompt("Modifica nota prodotto", item.modification || "");
+
+  if (newNote === null) return;
+
+  item.modification = newNote.trim();
+
+  await updateTableAfterEdit(tableNumber, orders);
+}
 async function archiveAndCloseTable(tableNumber, table) {
   const closedAt = new Date().toISOString();
 
