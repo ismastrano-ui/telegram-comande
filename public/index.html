@@ -224,28 +224,35 @@
 
   <!-- FIREBASE -->
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- CONFIG -->
+<script>
 
-  const firebaseConfig = {
-      apiKey: "AIzaSyC2SG-OxpkqXBFK7HGCxU2rXmT0KtA8puo",
-      authDomain: "telegram-comande.firebaseapp.com",
-      projectId: "telegram-comande",
-      storageBucket: "telegram-comande.firebasestorage.app",
-      messagingSenderId: "180271164173",
-      appId: "1:180271164173:web:6aff8c8bb604131f5bde44"
-    };
+const firebaseConfig = {
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  apiKey: "AIzaSyC2SG-OxpkqXBFK7HGCxU2rXmT0KtA8puo",
 
-  <!-- APP -->
+  authDomain: "telegram-comande.firebaseapp.com",
 
-  <script src="app.js"></script>
+  projectId: "telegram-comande",
+
+  storageBucket: "telegram-comande.firebasestorage.app",
+
+  messagingSenderId: "180271164173",
+
+  appId: "1:180271164173:web:6aff8c8bb604131f5bde44"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+window.db = firebase.firestore();
+
+</script>
+
+<script src="app.js"></script>
 
 </body>
-
 </html>
