@@ -151,6 +151,8 @@ const loginScreen = document.getElementById("loginScreen");
 const mainApp = document.getElementById("mainApp");
 const loggedUserDiv = document.getElementById("loggedUser");
 const accessCodeInput = document.getElementById("accessCode");
+const operatorNameInput =
+  document.getElementById("operatorName");
 const loginButton = document.getElementById("loginButton");
 
 const menuDiv = document.getElementById("menu");
@@ -191,15 +193,34 @@ if (loggedWaiter) {
 }
 
 loginButton.addEventListener("click", () => {
-  const code = accessCodeInput.value.trim();
+
+  const code =
+    accessCodeInput.value.trim();
+
+  const operatorName =
+    operatorNameInput.value.trim();
 
   if (!waiterCodes[code]) {
+
     alert("Codice non valido");
+
     return;
   }
 
-  loggedWaiter = waiterCodes[code];
-  localStorage.setItem("loggedWaiter", loggedWaiter);
+  if (!operatorName) {
+
+    alert("Inserisci nome operatore");
+
+    return;
+  }
+
+  loggedWaiter = operatorName;
+
+  localStorage.setItem(
+    "loggedWaiter",
+    loggedWaiter
+  );
+
   showMainApp();
 });
 
