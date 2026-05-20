@@ -200,7 +200,71 @@ backupButton.addEventListener(
   "click",
   createBackup
 );
+async function createBackup() {
 
+  const confirmBackup =
+    confirm(
+      "Creare backup completo dei dati?"
+    );
+
+  if (!confirmBackup) return;
+
+  try {
+
+    const openSnapshot =
+      await db
+        .collection("tables")
+        .get();
+
+    const closedSnapshot =
+      await db
+        .collection("closedTables")
+        .get();
+
+    const openTables = [];
+    const closedTables = [];
+
+    openSnapshot.forEach(doc => {
+
+      openTables.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    closedSnapshot.forEach(doc => {
+
+      closedTables.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    await db
+      .collection("backups")
+      .add({
+
+        createdAt:
+          new Date().toISOString(),
+
+        openTables,
+        closedTables
+
+      });
+
+    alert(
+      "Backup completato ✅"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Errore durante backup"
+    );
+  }
+}
 function renderStats(openTables, closedTodayTables) {
   const revenueToday = closedTodayTables.reduce((sum, table) => {
     return sum + Number(table.total || 0);
