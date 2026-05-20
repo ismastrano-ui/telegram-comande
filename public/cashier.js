@@ -190,7 +190,16 @@ async function clearTodayClosedTables() {
 }
 
 clearDayButton.addEventListener("click", clearTodayClosedTables);
-refreshButton.addEventListener("click", loadCashierData);
+
+refreshButton.addEventListener(
+  "click",
+  loadCashierData
+);
+
+backupButton.addEventListener(
+  "click",
+  createBackup
+);
 
 function renderStats(openTables, closedTodayTables) {
   const revenueToday = closedTodayTables.reduce((sum, table) => {
