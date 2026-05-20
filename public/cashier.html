@@ -10,53 +10,31 @@
 </head>
 
 <body>
-
-  <div class="app">
-
+  <div class="app cashier-app">
     <h1>💰 Cassa</h1>
 
-    <section class="card">
-
-      <button id="clearDayButton">
-        🧹 Svuota giornata
-      </button>
-
+    <section class="card cashier-tools">
+      <button id="refreshButton">🔄 Aggiorna</button>
+      <button id="clearDayButton">🧹 Svuota chiusi oggi</button>
     </section>
 
     <section class="card">
-
-      <h2>📊 Riepilogo giornata</h2>
-
-      <div id="cashierStats">
-        Caricamento...
-      </div>
-
+      <h2>📊 Giornata</h2>
+      <div id="cashierStats">Caricamento...</div>
     </section>
 
     <section class="card">
-
       <h2>🔴 Tavoli aperti</h2>
-
-      <div id="cashierOpenTables">
-        Caricamento tavoli...
-      </div>
-
+      <div id="cashierOpenTables">Caricamento tavoli...</div>
     </section>
 
     <section class="card">
-
       <h2>✅ Tavoli chiusi oggi</h2>
-
-      <div id="cashierClosedTables">
-        Caricamento storico...
-      </div>
-
+      <div id="cashierClosedTables">Caricamento storico...</div>
     </section>
-
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
@@ -70,11 +48,9 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-
     const db = firebase.firestore();
   </script>
 
-  <script src="cashier.js"></script>
-
+  <script src="cashier.js?v=20"></script>
 </body>
 </html>
