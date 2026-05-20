@@ -151,8 +151,6 @@ const loginScreen = document.getElementById("loginScreen");
 const mainApp = document.getElementById("mainApp");
 const loggedUserDiv = document.getElementById("loggedUser");
 const accessCodeInput = document.getElementById("accessCode");
-const operatorNameInput =
-  document.getElementById("operatorName");
 const loginButton = document.getElementById("loginButton");
 
 const menuDiv = document.getElementById("menu");
@@ -193,34 +191,15 @@ if (loggedWaiter) {
 }
 
 loginButton.addEventListener("click", () => {
-
-  const code =
-    accessCodeInput.value.trim();
-
-  const operatorName =
-    operatorNameInput.value.trim();
+  const code = accessCodeInput.value.trim();
 
   if (!waiterCodes[code]) {
-
     alert("Codice non valido");
-
     return;
   }
 
-  if (!operatorName) {
-
-    alert("Inserisci nome operatore");
-
-    return;
-  }
-
-  loggedWaiter = operatorName;
-
-  localStorage.setItem(
-    "loggedWaiter",
-    loggedWaiter
-  );
-
+  loggedWaiter = waiterCodes[code];
+  localStorage.setItem("loggedWaiter", loggedWaiter);
   showMainApp();
 });
 
@@ -334,7 +313,8 @@ function addToCart(name, price, category) {
     item =>
       item.name === name &&
       item.category === category &&
-      !item.modification
+      !item.modification &&
+      (!item.extras || item.extras.length === 0)
   );
 
   if (existingItem) {
@@ -342,10 +322,12 @@ function addToCart(name, price, category) {
   } else {
     cart.push({
       name,
+      basePrice: price,
       price,
       category,
       quantity: 1,
-      modification: ""
+      modification: "",
+      extras: []
     });
   }
 
@@ -356,7 +338,7 @@ function editModification(index) {
   const currentModification = cart[index].modification || "";
 
   const newModification = prompt(
-    `Inserisci modifica per ${cart[index].name}`,
+    `Inserisci nota/modifica per ${cart[index].name}`,
     currentModification
   );
 
@@ -364,6 +346,81 @@ function editModification(index) {
     cart[index].modification = newModification.trim();
     renderCart();
   }
+}
+
+function addExtra(index) {
+  const item = cart[index];
+
+  if (!item) return;
+
+  if (item.quantity > 1) {
+    const applyAll = confirm(
+      `Questo prodotto ha quantità ${item.quantity}.\n\nVuoi applicare l'extra a tutti i pezzi?\n\nOK = a tutti\nAnnulla = solo a 1 pezzo`
+    );
+
+    if (!applyAll) {
+      item.quantity -= 1;
+
+      cart.push({
+        name: item.name,
+        basePrice: item.basePrice || item.price,
+        price: item.basePrice || item.price,
+        category: item.category,
+        quantity: 1,
+        modification: item.modification || "",
+        extras: []
+      });
+
+      renderCart();
+
+      const newIndex = cart.length - 1;
+      addExtra(newIndex);
+      return;
+    }
+  }
+
+  const extraName = prompt("Nome extra / aggiunta", "Bufala");
+
+  if (!extraName) return;
+
+  const extraPriceRaw = prompt(`Prezzo extra "${extraName}"`, "2");
+
+  if (extraPriceRaw === null) return;
+
+  const extraPrice = Number(
+    String(extraPriceRaw).replace(",", ".")
+  );
+
+  if (isNaN(extraPrice)) {
+    alert("Prezzo non valido");
+    return;
+  }
+
+  if (!item.extras) {
+    item.extras = [];
+  }
+
+  item.extras.push({
+    name: extraName.trim(),
+    price: extraPrice
+  });
+
+  item.price = Number(item.price || 0) + extraPrice;
+
+  renderCart();
+}
+
+function removeExtra(itemIndex, extraIndex) {
+  const item = cart[itemIndex];
+
+  if (!item || !item.extras || !item.extras[extraIndex]) return;
+
+  const extra = item.extras[extraIndex];
+
+  item.price = Number(item.price || 0) - Number(extra.price || 0);
+  item.extras.splice(extraIndex, 1);
+
+  renderCart();
 }
 
 function decreaseItem(index) {
@@ -379,6 +436,40 @@ function decreaseItem(index) {
 function removeItem(index) {
   cart.splice(index, 1);
   renderCart();
+}
+
+function getExtrasText(item, html = true) {
+  if (!item.extras || item.extras.length === 0) return "";
+
+  if (html) {
+    return item.extras
+      .map((extra, extraIndex) => {
+        return `<br><em>➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
+          <button onclick="removeExtra(${cart.indexOf(item)}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
+        </em>`;
+      })
+      .join("");
+  }
+
+  return item.extras
+    .map(extra => `+ ${extra.name} €${Number(extra.price || 0).toFixed(2)}`)
+    .join("\n");
+}
+
+function buildCombinedModification(item) {
+  const parts = [];
+
+  if (item.extras && item.extras.length > 0) {
+    item.extras.forEach(extra => {
+      parts.push(`+ ${extra.name} €${Number(extra.price || 0).toFixed(2)}`);
+    });
+  }
+
+  if (item.modification) {
+    parts.push(item.modification);
+  }
+
+  return parts.join("\n");
 }
 
 function updateSmartBar(total = 0, totalItems = 0) {
@@ -407,6 +498,8 @@ function renderCart() {
     total += lineTotal;
     totalItems += item.quantity;
 
+    const extrasText = getExtrasText(item, true);
+
     const modificationText = item.modification
       ? `<br><em>✏️ ${item.modification}</em>`
       : "";
@@ -416,13 +509,16 @@ function renderCart() {
         <span>
           ${item.name} x${item.quantity}<br>
           <small>${item.category}</small><br>
+          <small>Prezzo unitario: €${Number(item.price || 0).toFixed(2)}</small><br>
           <strong>€${lineTotal.toFixed(2)}</strong>
+          ${extrasText}
           ${modificationText}
         </span>
 
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button onclick="decreaseItem(${index})">➖</button>
-          <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.category.replace(/'/g, "\\'")}')">➕</button>
+          <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.basePrice || item.price}, '${item.category.replace(/'/g, "\\'")}')">➕</button>
+          <button onclick="addExtra(${index})">➕ Extra</button>
           <button onclick="editModification(${index})">✏️</button>
           <button onclick="removeItem(${index})">🗑️</button>
         </div>
@@ -679,7 +775,12 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     return;
   }
 
-  const total = cart.reduce((sum, item) => {
+  const cartForSend = cart.map(item => ({
+    ...item,
+    modification: buildCombinedModification(item)
+  }));
+
+  const total = cartForSend.reduce((sum, item) => {
     return sum + item.price * item.quantity;
   }, 0);
 
@@ -691,7 +792,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     body: JSON.stringify({
       table,
       notes,
-      cart,
+      cart: cartForSend,
       total,
       orderType,
       waiter: loggedWaiter
@@ -716,7 +817,7 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
       waiter: loggedWaiter,
       type: orderType,
       createdAt: new Date().toISOString(),
-      items: cart.map(item => ({ ...item })),
+      items: cartForSend.map(item => ({ ...item })),
       notes: notes,
       total: total
     };
