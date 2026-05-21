@@ -1108,3 +1108,27 @@ button:active,
 .menu-item {
   animation: popIn 0.18s ease;
 }
+.category-header {
+  background: #ffffff !important;
+  color: #111 !important;
+  border: 2px solid #e5e7eb !important;
+}
+
+.active-category-header {
+  background: #e8f5ee !important;
+  color: #166534 !important;
+  border-color: #22c55e !important;
+}
+#mobileSendButton {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  min-height: 54px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 24px !important;
+  overflow: hidden !important;
+}

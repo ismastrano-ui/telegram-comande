@@ -266,15 +266,14 @@ async function createBackup() {
   }
 }
 function renderStats(openTables, closedTodayTables) {
-  const revenueToday = closedTodayTables.reduce((sum, table) => {
-    return sum + Number(table.total || 0);
-  }, 0);
-
   cashierStatsDiv.innerHTML = `
     <div class="cashier-stat-grid">
       <div class="cashier-stat">
         <small>Incasso oggi</small>
-        <strong>€${revenueToday.toFixed(2)}</strong>
+        <strong id="revenueValue">••••</strong>
+        <button onclick="unlockRevenue()" style="margin-top:6px;">
+          🔐 Mostra
+        </button>
       </div>
 
       <div class="cashier-stat">
@@ -421,6 +420,47 @@ ${
 
     cashierClosedTablesDiv.appendChild(card);
   });
+}
+function unlockRevenue() {
+
+  const code =
+    prompt("Inserisci codice");
+
+  if (code !== "2002") {
+
+    alert("Codice non valido");
+
+    return;
+  }
+
+  db.collection("closedTables")
+    .get()
+    .then(snapshot => {
+
+      let revenueToday = 0;
+
+      snapshot.forEach(doc => {
+
+        const table = doc.data();
+
+        if (isToday(table.closedAt)) {
+
+          revenueToday +=
+            Number(table.total || 0);
+        }
+      });
+
+      const revenueValue =
+        document.getElementById(
+          "revenueValue"
+        );
+
+      if (revenueValue) {
+
+        revenueValue.textContent =
+          `€${revenueToday.toFixed(2)}`;
+      }
+    });
 }
 
 async function loadCashierData() {
