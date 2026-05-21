@@ -352,7 +352,18 @@ function renderOpenTables(openTables) {
     return;
   }
 
-  openTables.sort((a, b) => Number(a.tableNumber) - Number(b.tableNumber));
+  openTables.sort((a, b) => {
+  const aTakeaway = String(a.tableNumber || "").startsWith("ASPORTO");
+  const bTakeaway = String(b.tableNumber || "").startsWith("ASPORTO");
+
+  if (aTakeaway !== bTakeaway) return aTakeaway ? 1 : -1;
+
+  if (aTakeaway && bTakeaway) {
+    return new Date(a.openedAt || 0) - new Date(b.openedAt || 0);
+  }
+
+  return Number(a.tableNumber) - Number(b.tableNumber);
+});
 
   openTables.forEach(table => {
     const orders = table.orders || [];

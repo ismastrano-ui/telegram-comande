@@ -1521,7 +1521,15 @@ const nativeSearchButton =
   document.getElementById("nativeSearchButton");
 
 nativeSearchButton.onclick = () => {
-  const navMenu =
+  searchInput.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  searchInput.focus();
+};
+
+const navMenu =
   document.getElementById("navMenu");
 
 const navCart =
@@ -1531,7 +1539,6 @@ const navTables =
   document.getElementById("navTables");
 
 function setActiveNav(tab) {
-
   document
     .querySelectorAll(".nav-tab")
     .forEach(btn =>
@@ -1541,36 +1548,23 @@ function setActiveNav(tab) {
   tab.classList.add("active-nav");
 }
 
-navMenu.onclick = () => {
+if (navMenu) {
+  navMenu.onclick = () => {
+    setActiveNav(navMenu);
+    menuDiv.scrollIntoView({ behavior: "smooth" });
+  };
+}
 
-  setActiveNav(navMenu);
+if (navCart) {
+  navCart.onclick = () => {
+    setActiveNav(navCart);
+    cartDiv.scrollIntoView({ behavior: "smooth" });
+  };
+}
 
-  menuDiv.scrollIntoView({
-    behavior: "smooth"
-  });
-};
-
-navCart.onclick = () => {
-
-  setActiveNav(navCart);
-
-  cartDiv.scrollIntoView({
-    behavior: "smooth"
-  });
-};
-
-navTables.onclick = () => {
-
-  setActiveNav(navTables);
-
-  openTablesDiv.scrollIntoView({
-    behavior: "smooth"
-  });
-};
-  searchInput.scrollIntoView({
-    behavior: "smooth",
-    block: "center"
-  });
-
-  searchInput.focus();
-};
+if (navTables) {
+  navTables.onclick = () => {
+    setActiveNav(navTables);
+    openTablesDiv.scrollIntoView({ behavior: "smooth" });
+  };
+}

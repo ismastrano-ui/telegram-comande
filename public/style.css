@@ -1232,3 +1232,115 @@ body {
 #openTables {
   padding-bottom: 130px;
 }
+html,
+body {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+body {
+  touch-action: pan-y;
+}
+
+#mainApp {
+  overflow-x: hidden;
+}
+/* CLEANUP PERFORMANCE FINALE */
+
+#nativeBottomNav {
+  display: none !important;
+}
+
+#smartBar {
+  display: none !important;
+}
+
+#mobileSendButton {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  min-height: 54px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 24px !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+}
+
+.categories {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  position: static !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.cart-row,
+.open-mini-card {
+  animation: none !important;
+}
+
+.menu-item {
+  animation: none !important;
+}
+
+#nativeHeader,
+#mobileBottomBar {
+  backdrop-filter: none !important;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+body {
+  touch-action: pan-y;
+  padding-bottom: 120px !important;
+}
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip !important;
+  position: relative;
+}
+
+.app,
+#mainApp,
+.card,
+.menu-item,
+.cart-row,
+.open-mini-card,
+.cashier-table-card,
+.modal-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#mobileBottomBar {
+  max-width: calc(100vw - 20px);
+}
+
+button,
+input,
+textarea {
+  max-width: 100%;
+}
+
+pre,
+code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
