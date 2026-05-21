@@ -377,21 +377,22 @@ function renderMenu() {
 
   itemsToShow.forEach(item => {
     const row = document.createElement("div");
-    row.className = "menu-item";
+    row.className = "menu-item compact-product";
 
-    const info = document.createElement("span");
-    info.innerHTML = `
-      ${item.name}<br>
-      <small>${item.category}</small><br>
-      <strong>€${item.price.toFixed(2)}</strong>
+    row.innerHTML = `
+      <span>
+        <strong>${item.name}</strong>
+        <small>${item.category}</small>
+      </span>
+
+      <div class="product-actions">
+        <strong>€${item.price.toFixed(2)}</strong>
+        <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.price}, '${item.category.replace(/'/g, "\\'")}')">
+          ➕
+        </button>
+      </div>
     `;
 
-    const button = document.createElement("button");
-    button.textContent = "➕";
-    button.onclick = () => addToCart(item.name, item.price, item.category);
-
-    row.appendChild(info);
-    row.appendChild(button);
     menuDiv.appendChild(row);
   });
 }

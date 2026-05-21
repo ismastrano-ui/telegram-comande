@@ -810,14 +810,48 @@ button {
   right: 10px;
   bottom: 10px;
   z-index: 3000;
+
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #111;
+
+  background: rgba(17,17,17,0.96);
   color: white;
-  padding: 10px;
+
+  padding: 10px 12px;
+
   border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+
+  backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.35);
+}
+
+#mobileBottomInfo {
+  flex: 1;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+#mobileSendButton {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 14px;
+
+  background: #22c55e;
+  color: white;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
 }
 
 #mobileBottomInfo {
@@ -847,4 +881,27 @@ body {
 
 body:has(.modal:not(.hidden)) #mobileBottomBar {
   display: none !important;
+}
+.compact-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.compact-product span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.product-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-actions button {
+  width: 44px;
+  height: 44px;
+  padding: 0 !important;
 }
