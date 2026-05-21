@@ -730,20 +730,35 @@ async function loadOpenTables() {
     const lastOrder = orders[orders.length - 1];
     const waiter = lastOrder?.waiter || "N/D";
 
+    const isTakeaway =
+      table.orderMode === "takeaway" ||
+      String(table.tableNumber || "").startsWith("ASPORTO");
+
+    const title = isTakeaway
+      ? "🥡 ASPORTO"
+      : `🔴 Tavolo ${table.tableNumber}`;
+
+    const mainName = isTakeaway
+      ? (table.customerName || lastOrder?.customerName || "Cliente")
+      : waiter;
+
+    const pickupTime = table.pickupTime || lastOrder?.pickupTime || "";
+
     const tableCard = document.createElement("div");
     tableCard.className = "menu-item";
 
     tableCard.innerHTML = `
       <span>
-        🔴 Tavolo ${table.tableNumber}
-        ${coperti > 0 ? `— 👥 ${coperti}` : ""}<br>
-        👤 ${waiter}<br>
+        ${title}
+        ${!isTakeaway && coperti > 0 ? `— 👥 ${coperti}` : ""}<br>
+        👤 ${mainName}<br>
+        ${isTakeaway && pickupTime ? `🕒 ${pickupTime}<br>` : ""}
         <strong>€${Number(table.total || 0).toFixed(2)}</strong><br>
         <small>⏱️ aperto da ${getElapsedTime(table.openedAt)}</small>
       </span>
 
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <button onclick="selectTable('${table.tableNumber}')">➕ Aggiunta</button>
+        ${isTakeaway ? "" : `<button onclick="selectTable('${table.tableNumber}')">➕ Aggiunta</button>`}
         <button onclick="showTableHistory('${table.tableNumber}')">📜 Storico</button>
         <button onclick="editTable('${table.tableNumber}')">✏️ Modifica</button>
         <button onclick="closeTable('${table.tableNumber}')">💰 Chiudi</button>
