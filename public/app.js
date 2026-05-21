@@ -329,12 +329,23 @@ function renderCategories() {
 
   Object.keys(menu).forEach(category => {
     const button = document.createElement("button");
-    button.textContent = category;
+
+    button.textContent =
+      currentCategory === category
+        ? `${category} ▲`
+        : `${category} ▼`;
+
+    button.className =
+      currentCategory === category
+        ? "category-pill active-category"
+        : "category-pill";
 
     button.onclick = () => {
       currentCategory = category;
       searchInput.value = "";
       searchQuery = "";
+
+      renderCategories();
       renderMenu();
     };
 
