@@ -34,44 +34,29 @@ enableSoundButton?.addEventListener("click", async () => {
 });
 
 function playNotificationSound(type = "new") {
-
   if (!soundEnabled || !audioContext) return;
 
   const now = audioContext.currentTime;
 
   function beep(time, frequency, duration) {
-
-    const oscillator =
-      audioContext.createOscillator();
-
-    const gain =
-      audioContext.createGain();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
 
     oscillator.connect(gain);
-
-    gain.connect(
-      audioContext.destination
-    );
+    gain.connect(audioContext.destination);
 
     oscillator.type = "square";
-
-    oscillator.frequency.value =
-      frequency;
-
+    oscillator.frequency.value = frequency;
     gain.gain.value = 0.22;
 
     oscillator.start(time);
-
     oscillator.stop(time + duration);
   }
 
   if (type === "add") {
-
     beep(now, 720, 0.12);
     beep(now + 0.18, 720, 0.12);
-
   } else {
-
     beep(now, 880, 0.14);
     beep(now + 0.2, 1040, 0.16);
   }
@@ -79,6 +64,22 @@ function playNotificationSound(type = "new") {
 
 function saveSeenOrders() {
   localStorage.setItem("kitchenSeenOrders", JSON.stringify([...seenOrders]));
+}
+
+function isTakeawayOrder(table, order) {
+  return (
+    order.orderMode === "takeaway" ||
+    table.orderMode === "takeaway" ||
+    String(table.tableNumber || table.id || "").startsWith("ASPORTO")
+  );
+}
+
+function getCustomerName(table, order) {
+  return order.customerName || table.customerName || "";
+}
+
+function getPickupTime(table, order) {
+  return order.pickupTime || table.pickupTime || "";
 }
 
 function isHiddenItem(item) {
@@ -225,31 +226,34 @@ function renderKitchen() {
   cards.forEach(cardData => {
     const { key, table, order, orderIndex, coperti, isNew, minutes } = cardData;
 
+    const takeaway = isTakeawayOrder(table, order);
+    const customerName = getCustomerName(table, order);
+    const pickupTime = getPickupTime(table, order);
+
     const card = document.createElement("div");
 
     card.className = `
       kitchen-card
       ${isNew ? "new-order" : ""}
       ${order.type === "add" ? "addition-order" : ""}
+      ${takeaway ? "takeaway-order" : ""}
     `;
 
     card.innerHTML = `
       <div class="kitchen-compact-header">
         <div class="kitchen-main-info">
-<strong>
-  ${order.orderMode === "takeaway" ? "🥡" : "🪑"}
-  ${order.orderMode === "takeaway"
-    ? "ASPORTO"
-    : (table.tableNumber || table.id)}
-</strong>          ${coperti > 0 ? `<span>👥 ${coperti}</span>` : ""}
-          <span>👤 ${order.waiter || "N/D"}</span>
-          ${(order.orderMode === "takeaway" || table.orderMode === "takeaway") && (order.customerName || table.customerName)
-  ? `<span>👤 ${order.customerName || table.customerName}</span>`
-  : ""}
+          <strong>
+            ${takeaway ? "🥡 ASPORTO" : `🪑 ${table.tableNumber || table.id}`}
+          </strong>
 
-${(order.orderMode === "takeaway" || table.orderMode === "takeaway") && (order.pickupTime || table.pickupTime)
-  ? `<span>🕒 ${order.pickupTime || table.pickupTime}</span>`
-  : ""}
+          ${!takeaway && coperti > 0 ? `<span>👥 ${coperti}</span>` : ""}
+
+          ${takeaway && customerName ? `<span>👤 ${customerName}</span>` : ""}
+
+          ${takeaway && pickupTime ? `<span>🕒 ${pickupTime}</span>` : ""}
+
+          <span>👨‍🍳 ${order.waiter || "N/D"}</span>
+
           <span class="order-type-badge">
             ${order.type === "add" ? "➕ AGGIUNTA" : "🆕 NUOVA"}
           </span>
@@ -331,10 +335,8 @@ function loadKitchenOrders() {
 
           if (!previousKeys.has(key) && !seenOrders.has(key)) {
             playNotificationSound(
-  order.type === "add"
-    ? "add"
-    : "new"
-);
+              order.type === "add" ? "add" : "new"
+            );
           }
         });
       });
