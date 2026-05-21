@@ -162,6 +162,35 @@ const openTablesDiv = document.getElementById("openTables");
 const searchInput = document.getElementById("searchInput");
 const tableMapDiv = document.getElementById("tableMap");
 const smartBarInfo = document.getElementById("smartBarInfo");
+const tableModeButton =
+  document.getElementById(
+    "tableModeButton"
+  );
+
+const takeawayModeButton =
+  document.getElementById(
+    "takeawayModeButton"
+  );
+
+const takeawayCard =
+  document.getElementById(
+    "takeawayCard"
+  );
+
+const customerNameInput =
+  document.getElementById(
+    "customerName"
+  );
+
+const pickupTimeInput =
+  document.getElementById(
+    "pickupTime"
+  );
+
+const tableNumberInput =
+  document.getElementById(
+    "tableNumber"
+  );
 
 async function showMainApp() {
   loginScreen.style.display = "none";
@@ -212,6 +241,47 @@ loginButton.addEventListener("click", () => {
   localStorage.setItem("loggedWaiter", loggedWaiter);
   showMainApp();
 });
+tableModeButton.onclick = () => {
+
+  orderMode = "table";
+
+  tableModeButton.classList.add(
+    "active-mode-button"
+  );
+
+  takeawayModeButton.classList.remove(
+    "active-mode-button"
+  );
+
+  takeawayCard.classList.add(
+    "hidden"
+  );
+
+  tableNumberInput.classList.remove(
+    "hidden"
+  );
+};
+
+takeawayModeButton.onclick = () => {
+
+  orderMode = "takeaway";
+
+  takeawayModeButton.classList.add(
+    "active-mode-button"
+  );
+
+  tableModeButton.classList.remove(
+    "active-mode-button"
+  );
+
+  takeawayCard.classList.remove(
+    "hidden"
+  );
+
+  tableNumberInput.classList.add(
+    "hidden"
+  );
+};
 
 function getElapsedTime(openedAt) {
   if (!openedAt) return "0m";
