@@ -236,9 +236,20 @@ function renderKitchen() {
     card.innerHTML = `
       <div class="kitchen-compact-header">
         <div class="kitchen-main-info">
-          <strong>🪑 ${table.tableNumber || table.id}</strong>
-          ${coperti > 0 ? `<span>👥 ${coperti}</span>` : ""}
+<strong>
+  ${order.orderMode === "takeaway" ? "🥡" : "🪑"}
+  ${order.orderMode === "takeaway"
+    ? "ASPORTO"
+    : (table.tableNumber || table.id)}
+</strong>          ${coperti > 0 ? `<span>👥 ${coperti}</span>` : ""}
           <span>👤 ${order.waiter || "N/D"}</span>
+          ${(order.orderMode === "takeaway" || table.orderMode === "takeaway") && (order.customerName || table.customerName)
+  ? `<span>👤 ${order.customerName || table.customerName}</span>`
+  : ""}
+
+${(order.orderMode === "takeaway" || table.orderMode === "takeaway") && (order.pickupTime || table.pickupTime)
+  ? `<span>🕒 ${order.pickupTime || table.pickupTime}</span>`
+  : ""}
           <span class="order-type-badge">
             ${order.type === "add" ? "➕ AGGIUNTA" : "🆕 NUOVA"}
           </span>
