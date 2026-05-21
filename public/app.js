@@ -601,13 +601,29 @@ function buildCombinedModification(item) {
 }
 
 function updateSmartBar(total = 0, totalItems = 0) {
-  const table = document.getElementById("tableNumber").value || "-";
-  const mode = orderType === "add" ? "Aggiunta" : "Nuova";
+
+  const table =
+    document.getElementById("tableNumber").value || "-";
+
+  const mode =
+    orderType === "add"
+      ? "➕ Aggiunta"
+      : "🆕 Nuova";
 
   smartBarInfo.innerHTML = `
-    🪑 Tavolo ${table} · ${mode}<br>
+    🪑 ${table} · ${mode}<br>
     🛒 ${totalItems} articoli | €${total.toFixed(2)}
   `;
+
+  const mobileInfo =
+    document.getElementById("mobileBottomInfo");
+
+  if (mobileInfo) {
+
+    mobileInfo.innerHTML = `
+      🛒 ${totalItems} prodotti · €${total.toFixed(2)}
+    `;
+  }
 }
 
 function renderCart() {
@@ -1469,3 +1485,11 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
   loadOpenTables();
   renderTableMap();
 });
+document.getElementById(
+  "mobileSendButton"
+).onclick = () => {
+
+  document.getElementById(
+    "sendOrder"
+  ).click();
+};
