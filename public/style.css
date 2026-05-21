@@ -582,7 +582,24 @@ hr {
 }
 
 .kitchen-card.addition-order {
-  border-left: 5px solid #f97316;
+  border: 3px solid #f97316;
+  background: #fff7ed;
+  animation: additionPulse 1.2s infinite;
+}
+
+@keyframes additionPulse {
+
+  0% {
+    background: #fff7ed;
+  }
+
+  50% {
+    background: #fed7aa;
+  }
+
+  100% {
+    background: #fff7ed;
+  }
 }
 
 .kitchen-compact-header {
@@ -608,14 +625,16 @@ hr {
 .order-type-badge {
   background: #111;
   color: white;
-  padding: 3px 7px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
 }
 
 .addition-order .order-type-badge {
-  background: #f97316;
+  background: #ea580c;
+  color: white;
 }
 
 .kitchen-timer {
@@ -672,4 +691,12 @@ hr {
     grid-template-columns: 1fr 1fr;
     gap: 9px;
   }
+}
+.active-mode-button {
+  background: #111 !important;
+  color: white !important;
+}
+
+.hidden {
+  display: none !important;
 }

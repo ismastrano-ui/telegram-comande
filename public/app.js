@@ -1266,10 +1266,15 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
   const table = document.getElementById("tableNumber").value;
   const notes = document.getElementById("notes").value;
 
-  if (!table) {
-    alert("Inserisci il numero del tavolo");
-    return;
-  }
+  if (orderMode === "table" && !table) {
+  alert("Inserisci il numero del tavolo");
+  return;
+}
+
+if (orderMode === "takeaway" && !customerNameInput.value.trim()) {
+  alert("Inserisci il nome cliente per l'asporto");
+  return;
+}
 
   if (cart.length === 0) {
     alert("Il carrello è vuoto");
@@ -1317,6 +1322,9 @@ document.getElementById("sendOrder").addEventListener("click", async () => {
     const newOrder = {
       waiter: loggedWaiter,
       type: orderType,
+      orderMode: orderMode,
+      customerName: orderMode === "takeaway" ? customerNameInput.value.trim() : "",
+      pickupTime: orderMode === "takeaway" ? pickupTimeInput.value : "",
       createdAt: new Date().toISOString(),
       items: cartForSend.map(item => ({ ...item })),
       notes: notes,
