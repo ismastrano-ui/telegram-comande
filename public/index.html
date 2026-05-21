@@ -133,7 +133,86 @@
       <h2>
         🪑 Tavolo
       </h2>
+<div class="card" id="orderModeCard">
 
+  <h3>Modalità ordine</h3>
+
+  <div
+    style="
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    "
+  >
+
+    <button
+      id="tableModeButton"
+      class="active-mode-button"
+      style="flex:1;"
+    >
+      🪑 Tavolo
+    </button>
+
+    <button
+      id="takeawayModeButton"
+      style="flex:1;"
+    >
+      🥡 Asporto
+    </button>
+
+  </div>
+
+</div>
+
+<div
+  class="card hidden"
+  id="takeawayCard"
+>
+
+  <h3>🥡 Dati asporto</h3>
+
+  <input
+    id="customerName"
+    type="text"
+    placeholder="Nome cliente"
+  />
+
+  <input
+    id="pickupTime"
+    type="time"
+    style="margin-top:10px;"
+  />
+
+</div>
+<div class="card" id="orderModeCard">
+  <h3>Modalità ordine</h3>
+
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <button id="tableModeButton" class="active-mode-button" style="flex:1;">
+      🪑 Tavolo
+    </button>
+
+    <button id="takeawayModeButton" style="flex:1;">
+      🥡 Asporto
+    </button>
+  </div>
+</div>
+
+<div class="card hidden" id="takeawayCard">
+  <h3>🥡 Dati asporto</h3>
+
+  <input
+    id="customerName"
+    type="text"
+    placeholder="Nome cliente"
+  />
+
+  <input
+    id="pickupTime"
+    type="time"
+    style="margin-top:10px;"
+  />
+</div>
       <input
         type="number"
         id="tableNumber"
