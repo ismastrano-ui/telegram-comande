@@ -328,28 +328,27 @@ function renderCategories() {
   categoriesDiv.innerHTML = "";
 
   Object.keys(menu).forEach(category => {
-    const button = document.createElement("button");
+    const section = document.createElement("div");
+    section.className = "category-accordion";
 
-    button.textContent =
-      currentCategory === category
-        ? `${category} ▲`
-        : `${category} ▼`;
+    const isActive = currentCategory === category;
 
-    button.className =
-      currentCategory === category
-        ? "category-pill active-category"
-        : "category-pill";
+    section.innerHTML = `
+      <button class="category-header ${isActive ? "active-category-header" : ""}">
+        <span>${category}</span>
+        <span>${isActive ? "▲" : "▼"}</span>
+      </button>
+    `;
 
-    button.onclick = () => {
+    section.querySelector("button").onclick = () => {
       currentCategory = category;
       searchInput.value = "";
       searchQuery = "";
-
       renderCategories();
       renderMenu();
     };
 
-    categoriesDiv.appendChild(button);
+    categoriesDiv.appendChild(section);
   });
 }
 

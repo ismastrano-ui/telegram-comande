@@ -1036,3 +1036,75 @@ body:has(.modal:not(.hidden)) #mobileBottomBar {
   background: #111 !important;
   color: white !important;
 }
+.categories {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+.category-accordion {
+  width: 100%;
+}
+
+.category-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f4f6;
+  color: #111;
+  border: 1px solid #ddd;
+  padding: 12px 14px !important;
+  border-radius: 14px !important;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.active-category-header {
+  background: #111 !important;
+  color: white !important;
+}
+button,
+.menu-item,
+.cart-row,
+.open-mini-card,
+.category-header {
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+
+button:active,
+.menu-item:active,
+.cart-row:active,
+.open-mini-card:active,
+.category-header:active {
+  transform: scale(0.97);
+}
+
+.menu-item:hover,
+.cart-row:hover,
+.open-mini-card:hover {
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.08);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cart-row,
+.open-mini-card,
+.menu-item {
+  animation: popIn 0.18s ease;
+}
