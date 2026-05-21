@@ -63,6 +63,48 @@ function getLastWaiter(table) {
   return lastOrder?.waiter || "N/D";
 }
 
+function calculateTheForkDiscount(table) {
+
+  const EXCLUDED_KEYWORDS = [
+    "coperto",
+    "acqua",
+    "coca",
+    "fanta",
+    "sprite",
+    "chinotto",
+    "birra",
+    "vino",
+    "calice",
+    "lete"
+  ];
+
+  let discountableTotal = 0;
+
+  (table.orders || []).forEach(order => {
+
+    (order.items || []).forEach(item => {
+
+      const name =
+        String(item.name || "")
+          .toLowerCase();
+
+      const excluded =
+        EXCLUDED_KEYWORDS.some(
+          keyword => name.includes(keyword)
+        );
+
+      if (!excluded) {
+
+        discountableTotal +=
+          Number(item.price || 0)
+          * Number(item.quantity || 0);
+      }
+    });
+  });
+
+  return discountableTotal * 0.20;
+}
+
 function buildTableSummary(tableNumber, table) {
   const orders = table.orders || [];
   const coperti = getCopertiFromOrders(orders);
@@ -348,6 +390,9 @@ ${
 
       <div class="cashier-actions">
         <button onclick="showOpenDetail('${table.tableNumber}')">📜 Dettaglio</button>
+        <button onclick="applyTheForkDiscount('${table.tableNumber}')">
+  🏷️ -20%
+</button>
         <button class="danger" onclick="closeTableFromCashier('${table.tableNumber}')">💰 Chiudi</button>
       </div>
     `;
@@ -461,6 +506,77 @@ function unlockRevenue() {
           `€${revenueToday.toFixed(2)}`;
       }
     });
+}
+
+async function applyTheForkDiscount(tableNumber) {
+
+  const doc =
+    await db
+      .collection("tables")
+      .doc(tableNumber)
+      .get();
+
+  if (!doc.exists) {
+
+    alert("Tavolo non trovato");
+
+    return;
+  }
+
+  const table = doc.data();
+
+  if (table.theForkDiscountApplied) {
+
+    alert(
+      "Sconto The Fork già applicato"
+    );
+
+    return;
+  }
+
+  const discount =
+    calculateTheForkDiscount(table);
+
+  if (discount <= 0) {
+
+    alert(
+      "Nessun prodotto scontabile"
+    );
+
+    return;
+  }
+
+  const confirmDiscount =
+    confirm(
+      `Applicare sconto The Fork di €${discount.toFixed(2)} ?`
+    );
+
+  if (!confirmDiscount) return;
+
+  const newTotal =
+    Math.max(
+      0,
+      Number(table.total || 0)
+      - discount
+    );
+
+  await db
+    .collection("tables")
+    .doc(tableNumber)
+    .update({
+
+      total: newTotal,
+
+      theForkDiscountApplied: true,
+
+      theForkDiscountValue:
+        discount
+
+    });
+
+  alert(
+    `Sconto The Fork applicato ✅\nNuovo totale: €${newTotal.toFixed(2)}`
+  );
 }
 
 async function loadCashierData() {
