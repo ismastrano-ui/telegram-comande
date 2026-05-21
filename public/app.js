@@ -397,9 +397,9 @@ function addExtra(index) {
     `;
 
     div.onclick = () => {
-      const alreadySelected = selectedExtras.find(e => e.name === extra.name);
+      const selected = selectedExtras.find(e => e.name === extra.name);
 
-      if (alreadySelected) {
+      if (selected) {
         selectedExtras = selectedExtras.filter(e => e.name !== extra.name);
         div.classList.remove("selected");
       } else {
@@ -425,10 +425,6 @@ function addExtra(index) {
       return sum + Number(extra.price || 0);
     }, 0);
 
-    const extraText = selectedExtras
-      .map(extra => `+ ${extra.name}`)
-      .join("\n");
-
     const applyToAll =
       Number(item.quantity || 1) <= 1
         ? true
@@ -447,10 +443,7 @@ function addExtra(index) {
             name: extra.name,
             price: Number(extra.price || 0)
           }))
-        ],
-        modification: item.modification
-          ? `${item.modification}\n${extraText}`
-          : extraText
+        ]
       };
 
       cart.splice(index + 1, 0, newItem);
@@ -465,10 +458,6 @@ function addExtra(index) {
       });
 
       item.price = Number(item.price || 0) + extraTotal;
-
-      item.modification = item.modification
-        ? `${item.modification}\n${extraText}`
-        : extraText;
     }
 
     modal.classList.add("hidden");
@@ -526,7 +515,15 @@ function buildCombinedModification(item) {
   }
 
   if (item.modification) {
-    parts.push(item.modification);
+    const cleanNote = String(item.modification)
+      .split("\n")
+      .filter(line => !line.trim().startsWith("+"))
+      .join("\n")
+      .trim();
+
+    if (cleanNote) {
+      parts.push(cleanNote);
+    }
   }
 
   return parts.join("\n");
