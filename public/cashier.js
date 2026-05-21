@@ -311,10 +311,35 @@ function renderOpenTables(openTables) {
     card.innerHTML = `
       <div class="cashier-table-main">
         <div>
-          <strong>🔴 Tavolo ${table.tableNumber}</strong>
-          ${coperti > 0 ? `<small>👥 ${coperti} coperti</small>` : ""}
-          <small>👤 ${waiter}</small>
-          <small>⏱️ ${getElapsedTime(table.openedAt)}</small>
+          ${
+  String(table.tableNumber || "").startsWith("ASPORTO")
+    ? `<strong>🥡 ASPORTO</strong>`
+    : `<strong>🔴 Tavolo ${table.tableNumber}</strong>`
+}
+
+${
+  !String(table.tableNumber || "").startsWith("ASPORTO")
+    && coperti > 0
+      ? `<small>👥 ${coperti} coperti</small>`
+      : ""
+}
+
+<small>
+  👤 ${
+    String(table.tableNumber || "").startsWith("ASPORTO")
+      ? (table.customerName || "Cliente")
+      : waiter
+  }
+</small>
+
+${
+  String(table.tableNumber || "").startsWith("ASPORTO")
+    && table.pickupTime
+      ? `<small>🕒 ${table.pickupTime}</small>`
+      : ""
+}
+
+<small>⏱️ ${getElapsedTime(table.openedAt)}</small>
         </div>
 
         <div class="cashier-total">
@@ -353,10 +378,35 @@ function renderClosedTables(closedTodayTables) {
     card.innerHTML = `
       <div class="cashier-table-main">
         <div>
-          <strong>✅ Tavolo ${table.tableNumber}</strong>
-          ${coperti > 0 ? `<small>👥 ${coperti} coperti</small>` : ""}
-          <small>👤 ${waiter}</small>
-          <small>🕒 ${formatTime(table.closedAt)}</small>
+          ${
+  String(table.tableNumber || "").startsWith("ASPORTO")
+    ? `<strong>🥡 ASPORTO</strong>`
+    : `<strong>✅ Tavolo ${table.tableNumber}</strong>`
+}
+
+${
+  !String(table.tableNumber || "").startsWith("ASPORTO")
+    && coperti > 0
+      ? `<small>👥 ${coperti} coperti</small>`
+      : ""
+}
+
+<small>
+  👤 ${
+    String(table.tableNumber || "").startsWith("ASPORTO")
+      ? (table.customerName || "Cliente")
+      : waiter
+  }
+</small>
+
+${
+  String(table.tableNumber || "").startsWith("ASPORTO")
+    && table.pickupTime
+      ? `<small>🕒 ${table.pickupTime}</small>`
+      : ""
+}
+
+<small>🕒 ${formatTime(table.closedAt)}</small>
         </div>
 
         <div class="cashier-total">
