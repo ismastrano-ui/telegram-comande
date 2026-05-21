@@ -1328,43 +1328,32 @@ document.getElementById("tableNumber").addEventListener("input", () => {
   renderCart();
 });
 
+
 document.getElementById("sendOrder").addEventListener("click", async () => {
   if (!loggedWaiter) {
     alert("Effettua il login");
     return;
   }
 
-  const table = document.getElementById("tableNumber").value;
+  const isTakeaway = orderMode === "takeaway";
+
+  const tableInput = document.getElementById("tableNumber").value.trim();
   const notes = document.getElementById("notes").value;
 
-if (
-  orderMode === "table"
-  && !table
-) {
+  const customerName = customerNameInput.value.trim();
+  const pickupTime = pickupTimeInput.value;
 
-  alert(
-    "Inserisci il numero del tavolo"
-  );
+  let table = isTakeaway ? `ASPORTO-${Date.now()}` : tableInput;
 
-  return;
-}
+  if (!isTakeaway && !table) {
+    alert("Inserisci il numero del tavolo");
+    return;
+  }
 
-if (
-  orderMode === "takeaway"
-  && !customerNameInput.value.trim()
-) {
-
-  alert(
-    "Inserisci il nome cliente"
-  );
-
-  return;
-}
-
-if (orderMode === "takeaway" && !customerNameInput.value.trim()) {
-  alert("Inserisci il nome cliente per l'asporto");
-  return;
-}
+  if (isTakeaway && !customerName) {
+    alert("Inserisci il nome cliente");
+    return;
+  }
 
   if (cart.length === 0) {
     alert("Il carrello è vuoto");
@@ -1391,73 +1380,77 @@ if (orderMode === "takeaway" && !customerNameInput.value.trim()) {
       cart: cartForSend,
       total,
       orderType,
-      waiter: loggedWaiter
+      waiter: loggedWaiter,
+      orderMode,
+      customerName: isTakeaway ? customerName : "",
+      pickupTime: isTakeaway ? pickupTime : ""
     })
   });
 
   const result = await response.json();
 
-  if (result.success) {
-    const tableRef = db.collection("tables").doc(table);
-    const existingDoc = await tableRef.get();
-
-    let existingOrders = [];
-    let openedAt = new Date().toISOString();
-
-    if (existingDoc.exists && existingDoc.data().status === "open") {
-      existingOrders = existingDoc.data().orders || [];
-      openedAt = existingDoc.data().openedAt || openedAt;
-    }
-
-    const newOrder = {
-      waiter: loggedWaiter,
-      type: orderType,
-      orderMode: orderMode,
-      customerName: orderMode === "takeaway" ? customerNameInput.value.trim() : "",
-      pickupTime: orderMode === "takeaway" ? pickupTimeInput.value : "",
-      createdAt: new Date().toISOString(),
-      items: cartForSend.map(item => ({ ...item })),
-      notes: notes,
-      total: total,
-      kitchenDone: false
-    };
-
-    const updatedOrders = [...existingOrders, newOrder];
-
-    const updatedTotal = updatedOrders.reduce((sum, order) => {
-      return sum + Number(order.total || 0);
-    }, 0);
-
-    await tableRef.set({
-      tableNumber: table,
-      openedAt: openedAt,
-      updatedAt: new Date().toISOString(),
-      orders: updatedOrders,
-      total: updatedTotal,
-      status: "open"
-    });
-
-    alert("Ordine inviato correttamente ✅");
-
-    cart.length = 0;
-    document.getElementById("notes").value = "";
-
-    if (orderType === "new") {
-      document.getElementById("tableNumber").value = "";
-    }
-
-    renderCart();
-    loadOpenTables();
-    renderTableMap();
-
-  } else {
-    alert("Errore durante l'invio dell'ordine");
+  if (!result.success) {
+    alert("Errore durante l'invio ordine");
+    return;
   }
+
+  const tableRef = db.collection("tables").doc(String(table));
+  const existingDoc = await tableRef.get();
+
+  let existingOrders = [];
+  let openedAt = new Date().toISOString();
+
+  if (existingDoc.exists && existingDoc.data().status === "open") {
+    existingOrders = existingDoc.data().orders || [];
+    openedAt = existingDoc.data().openedAt || openedAt;
+  }
+
+  const newOrder = {
+    waiter: loggedWaiter,
+    type: orderType,
+    orderMode,
+    customerName: isTakeaway ? customerName : "",
+    pickupTime: isTakeaway ? pickupTime : "",
+    createdAt: new Date().toISOString(),
+    items: cartForSend.map(item => ({ ...item })),
+    notes,
+    total,
+    kitchenDone: false
+  };
+
+  const updatedOrders = [...existingOrders, newOrder];
+
+  const updatedTotal = updatedOrders.reduce((sum, order) => {
+    return sum + Number(order.total || 0);
+  }, 0);
+
+  await tableRef.set({
+    tableNumber: table,
+    openedAt,
+    updatedAt: new Date().toISOString(),
+    orders: updatedOrders,
+    total: updatedTotal,
+    status: "open",
+    orderMode,
+    customerName: isTakeaway ? customerName : "",
+    pickupTime: isTakeaway ? pickupTime : ""
+  });
+
+  alert("Ordine inviato ✅");
+
+  cart.length = 0;
+  document.getElementById("notes").value = "";
+
+  if (!isTakeaway && orderType === "new") {
+    document.getElementById("tableNumber").value = "";
+  }
+
+  if (isTakeaway) {
+    customerNameInput.value = "";
+    pickupTimeInput.value = "";
+  }
+
+  renderCart();
+  loadOpenTables();
+  renderTableMap();
 });
-
-setInterval(() => {
-  if (loggedWaiter) {
-    loadOpenTables();
-    renderTableMap();
-  }
-}, 60000);
