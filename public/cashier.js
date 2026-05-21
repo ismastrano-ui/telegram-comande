@@ -64,8 +64,14 @@ function getLastWaiter(table) {
 }
 
 function calculateTheForkDiscount(table) {
+  const excludedCategories = [
+    "bevande",
+    "birre",
+    "vini",
+    "coperti"
+  ];
 
-  const EXCLUDED_KEYWORDS = [
+  const excludedKeywords = [
     "coperto",
     "acqua",
     "coca",
@@ -75,36 +81,43 @@ function calculateTheForkDiscount(table) {
     "birra",
     "vino",
     "calice",
-    "lete"
+    "lete",
+    "menabrea",
+    "messina",
+    "forst",
+    "carlsberg",
+    "kronenbourg",
+    "grimbergen",
+    "semedorato",
+    "rallo",
+    "purato",
+    "funaro",
+    "feudo",
+    "etna"
   ];
 
   let discountableTotal = 0;
 
   (table.orders || []).forEach(order => {
-
     (order.items || []).forEach(item => {
+      const name = String(item.name || "").toLowerCase();
+      const category = String(item.category || "").toLowerCase();
 
-      const name =
-        String(item.name || "")
-          .toLowerCase();
+      const excludedByCategory = excludedCategories.includes(category);
 
-      const excluded =
-        EXCLUDED_KEYWORDS.some(
-          keyword => name.includes(keyword)
-        );
+      const excludedByName = excludedKeywords.some(keyword =>
+        name.includes(keyword)
+      );
 
-      if (!excluded) {
-
+      if (!excludedByCategory && !excludedByName) {
         discountableTotal +=
-          Number(item.price || 0)
-          * Number(item.quantity || 0);
+          Number(item.price || 0) * Number(item.quantity || 0);
       }
     });
   });
 
   return discountableTotal * 0.20;
 }
-
 function buildTableSummary(tableNumber, table) {
   const orders = table.orders || [];
   const coperti = getCopertiFromOrders(orders);
