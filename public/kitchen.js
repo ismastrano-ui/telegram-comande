@@ -63,7 +63,12 @@ function playNotificationSound(type = "new") {
 }
 
 function saveSeenOrders() {
-  localStorage.setItem("kitchenSeenOrders", JSON.stringify([...seenOrders]));
+  const limitedSeenOrders = [...seenOrders].slice(-100);
+
+  localStorage.setItem(
+    "kitchenSeenOrders",
+    JSON.stringify(limitedSeenOrders)
+  );
 }
 
 function isTakeawayOrder(table, order) {
@@ -347,4 +352,4 @@ function loadKitchenOrders() {
 
 loadKitchenOrders();
 
-setInterval(renderKitchen, 30000);
+setInterval(renderKitchen, 60000);
