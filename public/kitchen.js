@@ -33,21 +33,48 @@ enableSoundButton?.addEventListener("click", async () => {
   alert("Notifiche attivate 🔔");
 });
 
-function playNotificationSound() {
+function playNotificationSound(type = "new") {
+
   if (!soundEnabled || !audioContext) return;
 
-  const oscillator = audioContext.createOscillator();
-  const gain = audioContext.createGain();
+  const now = audioContext.currentTime;
 
-  oscillator.connect(gain);
-  gain.connect(audioContext.destination);
+  function beep(time, frequency, duration) {
 
-  oscillator.type = "square";
-  oscillator.frequency.value = 880;
-  gain.gain.value = 0.25;
+    const oscillator =
+      audioContext.createOscillator();
 
-  oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.35);
+    const gain =
+      audioContext.createGain();
+
+    oscillator.connect(gain);
+
+    gain.connect(
+      audioContext.destination
+    );
+
+    oscillator.type = "square";
+
+    oscillator.frequency.value =
+      frequency;
+
+    gain.gain.value = 0.22;
+
+    oscillator.start(time);
+
+    oscillator.stop(time + duration);
+  }
+
+  if (type === "add") {
+
+    beep(now, 720, 0.12);
+    beep(now + 0.18, 720, 0.12);
+
+  } else {
+
+    beep(now, 880, 0.14);
+    beep(now + 0.2, 1040, 0.16);
+  }
 }
 
 function saveSeenOrders() {
@@ -292,7 +319,11 @@ function loadKitchenOrders() {
           const key = `${table.id}-${index}-${order.createdAt}-${order.modifiedAt || ""}`;
 
           if (!previousKeys.has(key) && !seenOrders.has(key)) {
-            playNotificationSound();
+            playNotificationSound(
+  order.type === "add"
+    ? "add"
+    : "new"
+);
           }
         });
       });
