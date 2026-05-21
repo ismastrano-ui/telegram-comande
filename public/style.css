@@ -1221,3 +1221,14 @@ button:active,
   background: #111 !important;
   color: white !important;
 }
+#nativeBottomNav {
+  display: none !important;
+}
+
+body {
+  padding-bottom: 120px !important;
+}
+
+#openTables {
+  padding-bottom: 130px;
+}
