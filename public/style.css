@@ -837,3 +837,14 @@ button {
 body {
   padding-bottom: 90px;
 }
+.modal {
+  z-index: 5000 !important;
+}
+
+.modal-content {
+  padding-bottom: 90px !important;
+}
+
+body:has(.modal:not(.hidden)) #mobileBottomBar {
+  display: none !important;
+}

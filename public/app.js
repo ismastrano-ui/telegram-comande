@@ -621,7 +621,13 @@ function updateSmartBar(total = 0, totalItems = 0) {
   if (mobileInfo) {
 
     mobileInfo.innerHTML = `
-      🛒 ${totalItems} prodotti · €${total.toFixed(2)}
+      ${
+        orderMode === "takeaway"
+          ? "🥡 ASPORTO"
+          : `🪑 ${table}`
+      }
+      · 🛒 ${totalItems}
+      · €${total.toFixed(2)}
     `;
   }
 }
