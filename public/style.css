@@ -905,3 +905,45 @@ body:has(.modal:not(.hidden)) #mobileBottomBar {
   height: 44px;
   padding: 0 !important;
 }
+.cart-row {
+  background: white;
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-left: 5px solid #111;
+}
+
+.cart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cart-info small {
+  font-weight: 800;
+}
+
+.cart-info em {
+  font-size: 13px;
+  color: #b35400;
+}
+
+.cart-actions {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.cart-actions button {
+  min-height: 36px;
+  font-size: 12px;
+  padding: 6px !important;
+}
+
+.cart-total {
+  font-size: 18px;
+  font-weight: 900;
+  text-align: right;
+  padding: 10px 4px;
+}

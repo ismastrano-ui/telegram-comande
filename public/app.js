@@ -649,27 +649,19 @@ function renderCart() {
     total += lineTotal;
     totalItems += Number(item.quantity || 0);
 
-    const extrasText = getExtrasText(item, index);
-
-    const modificationText = item.modification
-      ? `<br><em>✏️ ${item.modification}</em>`
-      : "";
-
     cartDiv.innerHTML += `
-      <div class="menu-item">
-        <span>
-          ${item.name} x${item.quantity}<br>
-          <small>${item.category}</small><br>
-          <small>Prezzo unitario: €${Number(item.price || 0).toFixed(2)}</small><br>
-          <strong>€${lineTotal.toFixed(2)}</strong>
-          ${extrasText}
-          ${modificationText}
-        </span>
+      <div class="cart-row">
+        <div class="cart-info">
+          <strong>${item.quantity}x ${item.name}</strong>
+          <small>€${lineTotal.toFixed(2)}</small>
+          ${getExtrasText(item, index)}
+          ${item.modification ? `<em>✏️ ${item.modification}</em>` : ""}
+        </div>
 
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <div class="cart-actions">
           <button onclick="decreaseItem(${index})">➖</button>
           <button onclick="addToCart('${item.name.replace(/'/g, "\\'")}', ${item.basePrice || item.price}, '${item.category.replace(/'/g, "\\'")}')">➕</button>
-          <button onclick="addExtra(${index})">➕ Extra</button>
+          <button onclick="addExtra(${index})">Extra</button>
           <button onclick="editModification(${index})">✏️</button>
           <button onclick="removeItem(${index})">🗑️</button>
         </div>
@@ -677,7 +669,12 @@ function renderCart() {
     `;
   });
 
-  cartDiv.innerHTML += `<hr><strong>Totale carrello: €${total.toFixed(2)}</strong>`;
+  cartDiv.innerHTML += `
+    <div class="cart-total">
+      Totale: €${total.toFixed(2)}
+    </div>
+  `;
+
   updateSmartBar(total, totalItems);
 }
 
