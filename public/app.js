@@ -756,7 +756,7 @@ async function loadOpenTables() {
 
     const title = isTakeaway
       ? "🥡 ASPORTO"
-      : `🔴 Tavolo ${table.tableNumber}`;
+      : `🪑 ${table.tableNumber}`;
 
     const mainName = isTakeaway
       ? (table.customerName || lastOrder?.customerName || "Cliente")
@@ -764,28 +764,36 @@ async function loadOpenTables() {
 
     const pickupTime = table.pickupTime || lastOrder?.pickupTime || "";
 
-    const tableCard = document.createElement("div");
-    tableCard.className = "menu-item";
+    const card = document.createElement("div");
+    card.className = `open-mini-card ${isTakeaway ? "takeaway-mini-card" : ""}`;
 
-    tableCard.innerHTML = `
-      <span>
-        ${title}
-        ${!isTakeaway && coperti > 0 ? `— 👥 ${coperti}` : ""}<br>
-        👤 ${mainName}<br>
-        ${isTakeaway && pickupTime ? `🕒 ${pickupTime}<br>` : ""}
-        <strong>€${Number(table.total || 0).toFixed(2)}</strong><br>
-        <small>⏱️ aperto da ${getElapsedTime(table.openedAt)}</small>
-      </span>
+    card.innerHTML = `
+      <div class="open-mini-main">
+        <div>
+          <strong>${title}</strong>
+          ${!isTakeaway && coperti > 0 ? `<span>👥 ${coperti}</span>` : ""}
+          ${isTakeaway && pickupTime ? `<span>🕒 ${pickupTime}</span>` : ""}
+        </div>
 
-      <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        ${isTakeaway ? "" : `<button onclick="selectTable('${table.tableNumber}')">➕ Aggiunta</button>`}
-        <button onclick="showTableHistory('${table.tableNumber}')">📜 Storico</button>
-        <button onclick="editTable('${table.tableNumber}')">✏️ Modifica</button>
-        <button onclick="closeTable('${table.tableNumber}')">💰 Chiudi</button>
+        <strong class="open-mini-total">
+          €${Number(table.total || 0).toFixed(2)}
+        </strong>
+      </div>
+
+      <div class="open-mini-sub">
+        <span>👤 ${mainName}</span>
+        <span>⏱️ ${getElapsedTime(table.openedAt)}</span>
+      </div>
+
+      <div class="open-mini-actions">
+        ${isTakeaway ? "" : `<button onclick="selectTable('${table.tableNumber}')">➕</button>`}
+        <button onclick="showTableHistory('${table.tableNumber}')">📜</button>
+        <button onclick="editTable('${table.tableNumber}')">✏️</button>
+        <button onclick="closeTable('${table.tableNumber}')">💰</button>
       </div>
     `;
 
-    openTablesDiv.appendChild(tableCard);
+    openTablesDiv.appendChild(card);
   });
 }
 
