@@ -142,6 +142,7 @@ const menu = {
 };
 
 const cart = [];
+let orderMode = "table";
 let currentCategory = "⚡ Veloci";
 let orderType = "new";
 let searchQuery = "";
