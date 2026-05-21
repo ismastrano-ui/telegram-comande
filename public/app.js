@@ -65,19 +65,21 @@ const menu = {
   ],
 
   "Evergreen": [
-    { name: "Napulè", price: 10.50 },
-    { name: "Margherita", price: 7.00 },
-    { name: "Rucoletta", price: 12.50 },
-    { name: "Crudo", price: 13.00 },
-    { name: "Gorgonzola e Pere", price: 10.50 },
-    { name: "Rustica", price: 10.50 },
-    { name: "Caliente", price: 10.50 },
-    { name: "Pistacchio", price: 11.50 },
-    { name: "Marinara", price: 5.50 },
-    { name: "Norma", price: 8.50 },
-    { name: "Vegetariana", price: 11.50 },
-    { name: "Caramellata", price: 10.50 }
-  ],
+  { name: "Napulè", price: 10.50 },
+  { name: "Margherita", price: 7.00 },
+  { name: "Rossa", price: 4.50 },
+  { name: "Biancaneve", price: 5.00 },
+  { name: "Rucoletta", price: 12.50 },
+  { name: "Crudo", price: 13.00 },
+  { name: "Gorgonzola e Pere", price: 10.50 },
+  { name: "Rustica", price: 10.50 },
+  { name: "Caliente", price: 10.50 },
+  { name: "Pistacchio", price: 11.50 },
+  { name: "Marinara", price: 5.50 },
+  { name: "Norma", price: 8.50 },
+  { name: "Vegetariana", price: 11.50 },
+  { name: "Caramellata", price: 10.50 }
+],
 
   "Meneghine": [
     { name: "N.1", price: 5.50 },
