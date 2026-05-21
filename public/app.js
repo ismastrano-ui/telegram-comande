@@ -1517,3 +1517,60 @@ document.getElementById(
     "sendOrder"
   ).click();
 };
+const nativeSearchButton =
+  document.getElementById("nativeSearchButton");
+
+nativeSearchButton.onclick = () => {
+  const navMenu =
+  document.getElementById("navMenu");
+
+const navCart =
+  document.getElementById("navCart");
+
+const navTables =
+  document.getElementById("navTables");
+
+function setActiveNav(tab) {
+
+  document
+    .querySelectorAll(".nav-tab")
+    .forEach(btn =>
+      btn.classList.remove("active-nav")
+    );
+
+  tab.classList.add("active-nav");
+}
+
+navMenu.onclick = () => {
+
+  setActiveNav(navMenu);
+
+  menuDiv.scrollIntoView({
+    behavior: "smooth"
+  });
+};
+
+navCart.onclick = () => {
+
+  setActiveNav(navCart);
+
+  cartDiv.scrollIntoView({
+    behavior: "smooth"
+  });
+};
+
+navTables.onclick = () => {
+
+  setActiveNav(navTables);
+
+  openTablesDiv.scrollIntoView({
+    behavior: "smooth"
+  });
+};
+  searchInput.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  searchInput.focus();
+};
