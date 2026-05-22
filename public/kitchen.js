@@ -330,7 +330,7 @@ function renderKitchen() {
                           class="first-exit-button"
                           onclick="markFirstExitDone('${table.id}', ${orderIndex})"
                         >
-                          🍟 Prima uscita evasa
+                          ☑️ Spunta prima uscita
                         </button>
                       `
                   }
