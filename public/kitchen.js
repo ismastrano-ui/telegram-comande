@@ -189,60 +189,178 @@ function buildKitchenItems(items) {
 function renderKitchen() {
   kitchenOrdersDiv.innerHTML = "";
 
-  const cards = [];
+  const tableCards = [];
 
   latestTables.forEach(table => {
     const orders = table.orders || [];
     const coperti = getCoperti(table);
 
-    orders.forEach((order, orderIndex) => {
-      if (order.kitchenDone) return;
-
-      const visibleItems = (order.items || []).filter(item => !isHiddenItem(item));
-      if (visibleItems.length === 0) return;
-
-      const key = `${table.id}-${orderIndex}-${order.createdAt}-${order.modifiedAt || ""}`;
-      const isNew = !seenOrders.has(key);
-      const minutes = getMinutes(order.createdAt);
-
-      cards.push({
-        key,
-        table,
+    const pendingOrders = orders
+      .map((order, orderIndex) => ({
         order,
         orderIndex,
-        coperti,
-        isNew,
-        minutes
+        key: `${table.id}-${orderIndex}-${order.createdAt}-${order.modifiedAt || ""}`
+      }))
+      .filter(data => {
+        if (data.order.kitchenDone) return false;
+
+        const visibleItems = (data.order.items || [])
+          .filter(item => !isHiddenItem(item));
+
+        return visibleItems.length > 0;
       });
+
+    if (pendingOrders.length === 0) return;
+
+    const isNew = pendingOrders.some(data => !seenOrders.has(data.key));
+
+    const firstCreatedAt =
+      pendingOrders[0].order.createdAt;
+
+    const minutes =
+      getMinutes(firstCreatedAt);
+
+    tableCards.push({
+      table,
+      coperti,
+      pendingOrders,
+      isNew,
+      minutes
     });
   });
 
-  cards.sort((a, b) => {
+  tableCards.sort((a, b) => {
     if (a.isNew !== b.isNew) return a.isNew ? -1 : 1;
-    if (a.order.type !== b.order.type) return a.order.type === "new" ? -1 : 1;
-    return new Date(a.order.createdAt || 0) - new Date(b.order.createdAt || 0);
+    return a.minutes - b.minutes;
   });
 
-  if (cards.length === 0) {
-    kitchenOrdersDiv.innerHTML = "Nessuna comanda pizzeria attiva";
+  if (tableCards.length === 0) {
+    kitchenOrdersDiv.innerHTML =
+      "Nessuna comanda pizzeria attiva";
     return;
   }
 
-  cards.forEach(cardData => {
-    const { key, table, order, orderIndex, coperti, isNew, minutes } = cardData;
+  tableCards.forEach(cardData => {
+    const {
+      table,
+      coperti,
+      pendingOrders,
+      isNew,
+      minutes
+    } = cardData;
 
-    const takeaway = isTakeawayOrder(table, order);
-    const customerName = getCustomerName(table, order);
-    const pickupTime = getPickupTime(table, order);
+    const firstOrder =
+      pendingOrders[0].order;
 
-    const card = document.createElement("div");
+    const takeaway =
+      isTakeawayOrder(table, firstOrder);
+
+    const customerName =
+      getCustomerName(table, firstOrder);
+
+    const pickupTime =
+      getPickupTime(table, firstOrder);
+
+    const card =
+      document.createElement("div");
 
     card.className = `
       kitchen-card
+      grouped-kitchen-card
       ${isNew ? "new-order" : ""}
-      ${order.type === "add" ? "addition-order" : ""}
       ${takeaway ? "takeaway-order" : ""}
     `;
+
+    const ordersHtml = pendingOrders.map(data => {
+      const order = data.order;
+      const orderIndex = data.orderIndex;
+
+      const visibleItems =
+        (order.items || []).filter(item => !isHiddenItem(item));
+
+      const firstExitItems =
+        visibleItems.filter(isFried);
+
+      const pizzaItems =
+        visibleItems.filter(item => !isFried(item) && !isDessert(item));
+
+      const dessertItems =
+        visibleItems.filter(isDessert);
+
+      const firstExitDone =
+        order.firstExitDone === true;
+
+      return `
+        <div class="kitchen-order-block ${order.type === "add" ? "addition-block" : ""}">
+
+          <div class="kitchen-order-title">
+            <strong>
+              ${order.type === "add" ? "➕ AGGIUNTA" : "🆕 COMANDA"}
+            </strong>
+
+            ${
+              order.firstExitDone
+                ? `<span class="first-exit-done-badge">🍟 Prima uscita evasa</span>`
+                : ""
+            }
+          </div>
+
+          ${
+            firstExitItems.length > 0
+              ? `
+                <div class="kitchen-section first-exit-section">
+                  <h3>🍟 PRIMA USCITA</h3>
+
+                  ${firstExitItems.map(item => `
+                    <div class="kitchen-item first-exit-item">
+                      <strong>${item.quantity}x ${item.name}</strong>
+                      ${item.modification ? `
+                        <div class="kitchen-note">
+                          ${formatModification(item.modification)}
+                        </div>
+                      ` : ""}
+                    </div>
+                  `).join("")}
+
+                  ${
+                    firstExitDone
+                      ? ""
+                      : `
+                        <button
+                          class="first-exit-button"
+                          onclick="markFirstExitDone('${table.id}', ${orderIndex})"
+                        >
+                          🍟 Prima uscita evasa
+                        </button>
+                      `
+                  }
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            pizzaItems.length > 0
+              ? renderSection("Pizze", "🍕", pizzaItems)
+              : ""
+          }
+
+          ${
+            dessertItems.length > 0
+              ? renderSection("Dolci", "🍰", dessertItems)
+              : ""
+          }
+
+          <button
+            class="done-button"
+            onclick="markKitchenOrderDone('${table.id}', ${orderIndex})"
+          >
+            ✅ Comanda evasa
+          </button>
+
+        </div>
+      `;
+    }).join("");
 
     card.innerHTML = `
       <div class="kitchen-compact-header">
@@ -257,10 +375,8 @@ function renderKitchen() {
 
           ${takeaway && pickupTime ? `<span>🕒 ${pickupTime}</span>` : ""}
 
-          <span>👨‍🍳 ${order.waiter || "N/D"}</span>
-
           <span class="order-type-badge">
-            ${order.type === "add" ? "➕ AGGIUNTA" : "🆕 NUOVA"}
+            ${pendingOrders.length} blocchi
           </span>
         </div>
 
@@ -269,43 +385,56 @@ function renderKitchen() {
         </div>
       </div>
 
-      ${buildKitchenItems(order.items || [])}
-
-      <button class="done-button">
-        ✅ EVASA
-      </button>
+      ${ordersHtml}
     `;
 
     card.onclick = () => {
-      seenOrders.add(key);
+      pendingOrders.forEach(data => {
+        seenOrders.add(data.key);
+      });
+
       saveSeenOrders();
       card.classList.remove("new-order");
     };
 
-    card.querySelector(".done-button").onclick = async event => {
-      event.stopPropagation();
-
-      const confirmDone = confirm("Segnare questa comanda come evasa?");
-      if (!confirmDone) return;
-
-      const tableRef = db.collection("tables").doc(table.id);
-      const doc = await tableRef.get();
-
-      if (!doc.exists) return;
-
-      const freshTable = doc.data();
-      const orders = freshTable.orders || [];
-
-      if (!orders[orderIndex]) return;
-
-      orders[orderIndex].kitchenDone = true;
-      orders[orderIndex].kitchenDoneAt = new Date().toISOString();
-
-      await tableRef.update({ orders });
-    };
-
     kitchenOrdersDiv.appendChild(card);
   });
+}
+async function markFirstExitDone(tableId, orderIndex) {
+  const tableRef = db.collection("tables").doc(tableId);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) return;
+
+  const table = doc.data();
+  const orders = table.orders || [];
+
+  if (!orders[orderIndex]) return;
+
+  orders[orderIndex].firstExitDone = true;
+  orders[orderIndex].firstExitDoneAt = new Date().toISOString();
+
+  await tableRef.update({ orders });
+}
+
+async function markKitchenOrderDone(tableId, orderIndex) {
+  const confirmDone = confirm("Segnare questa comanda come evasa?");
+  if (!confirmDone) return;
+
+  const tableRef = db.collection("tables").doc(tableId);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) return;
+
+  const table = doc.data();
+  const orders = table.orders || [];
+
+  if (!orders[orderIndex]) return;
+
+  orders[orderIndex].kitchenDone = true;
+  orders[orderIndex].kitchenDoneAt = new Date().toISOString();
+
+  await tableRef.update({ orders });
 }
 
 function loadKitchenOrders() {

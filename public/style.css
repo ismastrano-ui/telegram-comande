@@ -799,3 +799,63 @@ body {
 #openTables {
   padding-bottom: 180px !important;
 }
+.grouped-kitchen-card {
+  border-left: 6px solid #111;
+}
+
+.kitchen-order-block {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.addition-block {
+  background: #fff7ed;
+  border: 2px solid #fb923c;
+}
+
+.kitchen-order-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.kitchen-order-title strong {
+  font-size: 15px;
+}
+
+.first-exit-section {
+  background: #fff7ed;
+  border-radius: 12px;
+  padding: 8px;
+  border: 1px dashed #fb923c;
+}
+
+.first-exit-section h3 {
+  color: #c2410c;
+  font-weight: 900;
+}
+
+.first-exit-button {
+  width: 100%;
+  background: #f97316;
+  margin-top: 6px;
+}
+
+.first-exit-done-badge {
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.kitchen-order-block .done-button {
+  margin-top: 10px;
+}
