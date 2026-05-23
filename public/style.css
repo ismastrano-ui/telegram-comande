@@ -1000,3 +1000,20 @@ body {
 .done-button {
   margin-top: 8px !important;
 }
+/* FIX SCROLL VERTICALE */
+
+html,
+body {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  touch-action: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+
+.app,
+#mainApp {
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-y: visible !important;
+}
