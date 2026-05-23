@@ -193,7 +193,6 @@ function renderKitchen() {
 
   latestTables.forEach(table => {
     const orders = table.orders || [];
-    const coperti = getCoperti(table);
 
     const pendingOrders = orders
       .map((order, orderIndex) => ({
@@ -212,20 +211,46 @@ function renderKitchen() {
 
     if (pendingOrders.length === 0) return;
 
-    const isNew = pendingOrders.some(data => !seenOrders.has(data.key));
+    const allVisibleItems = [];
+    let hasAddition = false;
 
-    const firstCreatedAt =
-      pendingOrders[0].order.createdAt;
+    pendingOrders.forEach(data => {
+      const order = data.order;
 
-    const minutes =
-      getMinutes(firstCreatedAt);
+      if (order.type === "add") {
+        hasAddition = true;
+      }
+
+      (order.items || [])
+        .filter(item => !isHiddenItem(item))
+        .forEach(item => {
+          allVisibleItems.push({
+            ...item,
+            orderType: order.type
+          });
+        });
+    });
+
+    const firstExitItems = allVisibleItems.filter(isFried);
+
+    const pizzaItems = allVisibleItems.filter(item =>
+      !isFried(item) && !isDessert(item)
+    );
+
+    const dessertItems = allVisibleItems.filter(isDessert);
+
+    const firstOrder = pendingOrders[0].order;
 
     tableCards.push({
       table,
-      coperti,
       pendingOrders,
-      isNew,
-      minutes
+      firstExitItems,
+      pizzaItems,
+      dessertItems,
+      hasAddition,
+      isNew: pendingOrders.some(data => !seenOrders.has(data.key)),
+      minutes: getMinutes(firstOrder.createdAt),
+      firstOrder
     });
   });
 
@@ -235,34 +260,31 @@ function renderKitchen() {
   });
 
   if (tableCards.length === 0) {
-    kitchenOrdersDiv.innerHTML =
-      "Nessuna comanda pizzeria attiva";
+    kitchenOrdersDiv.innerHTML = "Nessuna comanda pizzeria attiva";
     return;
   }
 
   tableCards.forEach(cardData => {
     const {
       table,
-      coperti,
       pendingOrders,
+      firstExitItems,
+      pizzaItems,
+      dessertItems,
+      hasAddition,
       isNew,
-      minutes
+      minutes,
+      firstOrder
     } = cardData;
 
-    const firstOrder =
-      pendingOrders[0].order;
+    const takeaway = isTakeawayOrder(table, firstOrder);
+    const customerName = getCustomerName(table, firstOrder);
+    const pickupTime = getPickupTime(table, firstOrder);
+    const coperti = getCoperti(table);
 
-    const takeaway =
-      isTakeawayOrder(table, firstOrder);
+    const firstExitDone = table.firstExitDone === true;
 
-    const customerName =
-      getCustomerName(table, firstOrder);
-
-    const pickupTime =
-      getPickupTime(table, firstOrder);
-
-    const card =
-      document.createElement("div");
+    const card = document.createElement("div");
 
     card.className = `
       kitchen-card
@@ -270,97 +292,6 @@ function renderKitchen() {
       ${isNew ? "new-order" : ""}
       ${takeaway ? "takeaway-order" : ""}
     `;
-
-    const ordersHtml = pendingOrders.map(data => {
-      const order = data.order;
-      const orderIndex = data.orderIndex;
-
-      const visibleItems =
-        (order.items || []).filter(item => !isHiddenItem(item));
-
-      const firstExitItems =
-        visibleItems.filter(isFried);
-
-      const pizzaItems =
-        visibleItems.filter(item => !isFried(item) && !isDessert(item));
-
-      const dessertItems =
-        visibleItems.filter(isDessert);
-
-      const firstExitDone =
-        order.firstExitDone === true;
-
-      return `
-        <div class="kitchen-order-block ${order.type === "add" ? "addition-block" : ""}">
-
-          <div class="kitchen-order-title">
-            <strong>
-              ${order.type === "add" ? "➕ AGGIUNTA" : "🆕 COMANDA"}
-            </strong>
-
-            ${
-              order.firstExitDone
-                ? `<span class="first-exit-done-badge">🍟 Prima uscita evasa</span>`
-                : ""
-            }
-          </div>
-
-          ${
-            firstExitItems.length > 0
-              ? `
-                <div class="kitchen-section first-exit-section">
-                  <h3>🍟 PRIMA USCITA</h3>
-
-                  ${firstExitItems.map(item => `
-                    <div class="kitchen-item first-exit-item">
-                      <strong>${item.quantity}x ${item.name}</strong>
-                      ${item.modification ? `
-                        <div class="kitchen-note">
-                          ${formatModification(item.modification)}
-                        </div>
-                      ` : ""}
-                    </div>
-                  `).join("")}
-
-                  ${
-                    firstExitDone
-                      ? ""
-                      : `
-                        <button
-                          class="first-exit-button"
-                          onclick="markFirstExitDone('${table.id}', ${orderIndex})"
-                        >
-                          ☑️ Spunta prima uscita
-                        </button>
-                      `
-                  }
-                </div>
-              `
-              : ""
-          }
-
-          ${
-            pizzaItems.length > 0
-              ? renderSection("Pizze", "🍕", pizzaItems)
-              : ""
-          }
-
-          ${
-            dessertItems.length > 0
-              ? renderSection("Dolci", "🍰", dessertItems)
-              : ""
-          }
-
-          <button
-            class="done-button"
-            onclick="markKitchenOrderDone('${table.id}', ${orderIndex})"
-          >
-            ✅ Comanda evasa
-          </button>
-
-        </div>
-      `;
-    }).join("");
 
     card.innerHTML = `
       <div class="kitchen-compact-header">
@@ -375,6 +306,8 @@ function renderKitchen() {
 
           ${takeaway && pickupTime ? `<span>🕒 ${pickupTime}</span>` : ""}
 
+          ${hasAddition ? `<span class="addition-inline-badge">➕ AGGIUNTA</span>` : ""}
+
           <span class="order-type-badge">
             ${pendingOrders.length} blocchi
           </span>
@@ -385,7 +318,87 @@ function renderKitchen() {
         </div>
       </div>
 
-      ${ordersHtml}
+      ${
+        firstExitItems.length > 0
+          ? `
+            <div class="kitchen-section first-exit-section">
+              <div class="section-title-row">
+                <h3>🍟 PRIMA USCITA</h3>
+
+                <button
+                  class="first-exit-check ${firstExitDone ? "checked" : ""}"
+                  onclick="markTableFirstExitDone('${table.id}')"
+                >
+                  ${firstExitDone ? "✅" : "☑️"}
+                </button>
+              </div>
+
+              ${firstExitItems.map(item => `
+                <div class="kitchen-item first-exit-item ${item.orderType === "add" ? "item-added" : ""}">
+                  <strong>${item.quantity}x ${item.name}</strong>
+                  ${item.orderType === "add" ? `<span class="small-addition-badge">aggiunta</span>` : ""}
+                  ${item.modification ? `
+                    <div class="kitchen-note">
+                      ${formatModification(item.modification)}
+                    </div>
+                  ` : ""}
+                </div>
+              `).join("")}
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        pizzaItems.length > 0
+          ? `
+            <div class="kitchen-section">
+              <h3>🍕 PIZZE</h3>
+
+              ${pizzaItems.map(item => `
+                <div class="kitchen-item ${item.orderType === "add" ? "item-added" : ""}">
+                  <strong>${item.quantity}x ${item.name}</strong>
+                  ${item.orderType === "add" ? `<span class="small-addition-badge">aggiunta</span>` : ""}
+                  ${item.modification ? `
+                    <div class="kitchen-note">
+                      ${formatModification(item.modification)}
+                    </div>
+                  ` : ""}
+                </div>
+              `).join("")}
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        dessertItems.length > 0
+          ? `
+            <div class="kitchen-section">
+              <h3>🍰 DOLCI</h3>
+
+              ${dessertItems.map(item => `
+                <div class="kitchen-item ${item.orderType === "add" ? "item-added" : ""}">
+                  <strong>${item.quantity}x ${item.name}</strong>
+                  ${item.orderType === "add" ? `<span class="small-addition-badge">aggiunta</span>` : ""}
+                  ${item.modification ? `
+                    <div class="kitchen-note">
+                      ${formatModification(item.modification)}
+                    </div>
+                  ` : ""}
+                </div>
+              `).join("")}
+            </div>
+          `
+          : ""
+      }
+
+      <button
+        class="done-button"
+        onclick="markWholeTableKitchenDone('${table.id}')"
+      >
+        ✅ Comanda evasa
+      </button>
     `;
 
     card.onclick = () => {
@@ -398,6 +411,41 @@ function renderKitchen() {
     };
 
     kitchenOrdersDiv.appendChild(card);
+  });
+}
+async function markTableFirstExitDone(tableId) {
+  const tableRef = db.collection("tables").doc(tableId);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) return;
+
+  await tableRef.update({
+    firstExitDone: true,
+    firstExitDoneAt: new Date().toISOString()
+  });
+}
+
+async function markWholeTableKitchenDone(tableId) {
+  const confirmDone = confirm("Segnare tutta la comanda come evasa?");
+  if (!confirmDone) return;
+
+  const tableRef = db.collection("tables").doc(tableId);
+  const doc = await tableRef.get();
+
+  if (!doc.exists) return;
+
+  const table = doc.data();
+  const orders = table.orders || [];
+
+  const updatedOrders = orders.map(order => ({
+    ...order,
+    kitchenDone: true,
+    kitchenDoneAt: new Date().toISOString()
+  }));
+
+  await tableRef.update({
+    orders: updatedOrders,
+    kitchenDoneAt: new Date().toISOString()
   });
 }
 async function markFirstExitDone(tableId, orderIndex) {
