@@ -768,10 +768,24 @@ async function renderTableMap() {
         addOrderBtn.classList.add("active");
         newOrderBtn.classList.remove("active");
       } else {
-        orderType = "new";
-        newOrderBtn.classList.add("active");
-        addOrderBtn.classList.remove("active");
-      }
+  orderType = "new";
+  newOrderBtn.classList.add("active");
+  addOrderBtn.classList.remove("active");
+
+  const covers = prompt("Quanti coperti?");
+
+  if (covers && Number(covers) > 0) {
+    cart.push({
+      name: "Coperto",
+      basePrice: 2,
+      price: 2,
+      category: "Coperti",
+      quantity: Number(covers),
+      modification: "",
+      extras: []
+    });
+  }
+}
 
       renderCart();
     };
