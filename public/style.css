@@ -1017,3 +1017,10 @@ body {
   min-height: 100vh !important;
   overflow-y: visible !important;
 }
+.extra-search-input {
+  position: sticky;
+  top: 52px;
+  z-index: 3;
+  background: white;
+  margin-bottom: 10px;
+}

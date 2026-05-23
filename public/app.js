@@ -130,18 +130,23 @@ const menu = {
     { name: "Semedorato 66cl", price: 5.90 }
   ],
 
-  "Bevande": [
-    { name: "Acqua Naturale", price: 2.50 },
-    { name: "Acqua Lete", price: 2.50 },
-    { name: "Coca-cola 1L", price: 5.50 },
-    { name: "Coca-cola 33cl", price: 2.50 },
-    { name: "Coca-cola Zero 1L", price: 5.50 },
-    { name: "Coca-cola Zero 33cl", price: 2.50 },
-    { name: "Fanta 33cl", price: 2.50 },
-    { name: "Chinotto 33cl", price: 3.50 },
-    { name: "Sprite 33cl", price: 2.50 }
-  ]
+"Bevande": [
+  { name: "Acqua Naturale", price: 2.50 },
+  { name: "Acqua Lete", price: 2.50 },
+  { name: "Coca-cola 1L", price: 5.50 },
+  { name: "Coca-cola 33cl", price: 2.50 },
+  { name: "Coca-cola Zero 1L", price: 5.50 },
+  { name: "Coca-cola Zero 33cl", price: 2.50 },
+  { name: "Fanta 33cl", price: 2.50 },
+  { name: "Chinotto 33cl", price: 3.50 },
+  { name: "Sprite 33cl", price: 2.50 },
+  { name: "Amaro Unnimaffissu", price: 4.00 },
+  { name: "Spina Amara", price: 4.00 },
+  { name: "Unicum", price: 4.00 },
+  { name: "Caffè", price: 1.50 }
+]
 };
+
 menu["Tranci"] = [
   ...menu["Novità"],
   ...menu["Pizze Novus"],
@@ -474,35 +479,62 @@ function addExtra(index) {
 
   modal.classList.remove("hidden");
   extrasList.innerHTML = "";
+  const searchExtraInput = document.createElement("input");
+searchExtraInput.type = "text";
+searchExtraInput.placeholder = "Cerca extra...";
+searchExtraInput.className = "extra-search-input";
+
+extrasList.appendChild(searchExtraInput);
 
   let selectedExtras = [];
 
-  EXTRAS.forEach(extra => {
-    const div = document.createElement("div");
-    div.className = "extra-option";
+function renderExtrasOptions(filter = "") {
+  const selectedNames = selectedExtras.map(e => e.name);
 
-    div.innerHTML = `
-      <div>
-        <strong>${extra.name}</strong><br>
-        <small>+ €${Number(extra.price || 0).toFixed(2)}</small>
-      </div>
-    `;
+  extrasList
+    .querySelectorAll(".extra-option")
+    .forEach(el => el.remove());
 
-    div.onclick = () => {
-      const selected = selectedExtras.find(e => e.name === extra.name);
+  EXTRAS
+    .filter(extra =>
+      extra.name.toLowerCase().includes(filter.toLowerCase())
+    )
+    .forEach(extra => {
+      const div = document.createElement("div");
+      div.className = "extra-option";
 
-      if (selected) {
-        selectedExtras = selectedExtras.filter(e => e.name !== extra.name);
-        div.classList.remove("selected");
-      } else {
-        selectedExtras.push(extra);
+      if (selectedNames.includes(extra.name)) {
         div.classList.add("selected");
       }
-    };
 
-    extrasList.appendChild(div);
-  });
+      div.innerHTML = `
+        <div>
+          <strong>${extra.name}</strong><br>
+          <small>+ €${Number(extra.price || 0).toFixed(2)}</small>
+        </div>
+      `;
 
+      div.onclick = () => {
+        const selected = selectedExtras.find(e => e.name === extra.name);
+
+        if (selected) {
+          selectedExtras = selectedExtras.filter(e => e.name !== extra.name);
+          div.classList.remove("selected");
+        } else {
+          selectedExtras.push(extra);
+          div.classList.add("selected");
+        }
+      };
+
+      extrasList.appendChild(div);
+    });
+}
+
+searchExtraInput.addEventListener("input", () => {
+  renderExtrasOptions(searchExtraInput.value);
+});
+
+renderExtrasOptions();
   closeButton.onclick = () => {
     modal.classList.add("hidden");
   };
