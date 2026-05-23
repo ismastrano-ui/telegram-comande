@@ -4,6 +4,10 @@ const cashierClosedTablesDiv = document.getElementById("cashierClosedTables");
 const clearDayButton = document.getElementById("clearDayButton");
 const refreshButton = document.getElementById("refreshButton");
 const backupButton = document.getElementById("backupButton");
+const historyByDateButton =
+  document.getElementById(
+    "historyByDateButton"
+  );
 
 function isToday(dateString) {
   if (!dateString) return false;
@@ -643,3 +647,67 @@ db.collection("tables").onSnapshot(loadCashierData);
 db.collection("closedTables").onSnapshot(loadCashierData);
 
 loadCashierData();
+historyByDateButton.onclick = async () => {
+
+  const code = prompt(
+    "Inserisci codice accesso storico:"
+  );
+
+  if (code !== "2002") {
+    alert("Codice errato");
+    return;
+  }
+
+  const selectedDate = prompt(
+    "Inserisci data (GG/MM/AAAA)"
+  );
+
+  if (!selectedDate) return;
+
+  const [day, month, year] =
+    selectedDate.split("/");
+
+  if (!day || !month || !year) {
+    alert("Formato data non valido");
+    return;
+  }
+
+  cashierClosedTablesDiv.innerHTML =
+    "Caricamento storico...";
+
+  const snapshot =
+    await db.collection("closedTables").get();
+
+  const filteredTables = [];
+
+  snapshot.forEach(doc => {
+
+    const table = {
+      id: doc.id,
+      ...doc.data()
+    };
+
+    if (!table.closedAt) return;
+
+    const date =
+      new Date(table.closedAt);
+
+    const formatted =
+      String(date.getDate()).padStart(2, "0") +
+      "/" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "/" +
+      date.getFullYear();
+
+    if (formatted === selectedDate) {
+      filteredTables.push(table);
+    }
+  });
+
+  renderClosedTables(filteredTables);
+
+  if (filteredTables.length === 0) {
+    cashierClosedTablesDiv.innerHTML =
+      "Nessuna comanda trovata";
+  }
+};
