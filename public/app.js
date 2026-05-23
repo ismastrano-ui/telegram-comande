@@ -142,6 +142,14 @@ const menu = {
     { name: "Sprite 33cl", price: 2.50 }
   ]
 };
+menu["Tranci"] = [
+  ...menu["Novità"],
+  ...menu["Pizze Novus"],
+  ...menu["Evergreen"]
+].map(pizza => ({
+  name: `Trancio ${pizza.name}`,
+  price: Number((pizza.price / 2).toFixed(2))
+}));
 
 const cart = [];
 let orderMode = "table";
