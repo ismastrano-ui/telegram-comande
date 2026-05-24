@@ -553,22 +553,22 @@ function renderExtrasOptions(filter = "") {
       };
 
       div.querySelector(".extra-remove-btn").onclick = event => {
-        event.stopPropagation();
+  event.stopPropagation();
 
-        selectedExtras =
-          selectedExtras.filter(e => e.name !== extra.name);
+  selectedExtras =
+    selectedExtras.filter(e => e.name !== extra.name);
 
-        const removed =
-          removedIngredients.find(e => e.name === extra.name);
+  const removed =
+    removedIngredients.find(e => e.name === extra.name);
 
-        if (removed) {
-          removedIngredients =
-            removedIngredients.filter(e => e.name !== extra.name);
-        } else {
-          removedIngredients.push(extra);
-        }
+  if (removed) {
+    removedIngredients =
+      removedIngredients.filter(e => e.name !== extra.name);
+  } else {
+    removedIngredients.push(extra);
+  }
 
-        renderExtrasOptions(searchExtraInput.value);
+renderExtrasOptions(searchExtraInput.value);
       };
 
       extrasList.appendChild(div);
@@ -708,14 +708,6 @@ if (item.removedIngredients && item.removedIngredients.length > 0) {
     .join("");
 }
 
-  if (item.removedIngredients && item.removedIngredients.length > 0) {
-    html += item.removedIngredients
-      .map(ingredient => {
-        return `<br><em class="removed-ingredient">➖ senza ${ingredient.name}</em>`;
-      })
-      .join("");
-  }
-
   return html;
 }
 
@@ -805,7 +797,16 @@ function renderCart() {
           <strong>${item.quantity}x ${item.name}</strong>
           <small>€${lineTotal.toFixed(2)}</small>
           ${getExtrasText(item, index)}
-          ${item.modification ? `<em>✏️ ${item.modification}</em>` : ""}
+          ${
+  item.modification
+    ? `<em>✏️ ${
+        item.modification
+          .split("\n")
+          .filter(line => !line.startsWith("- senza"))
+          .join("<br>")
+      }</em>`
+    : ""
+}
         </div>
 
         <div class="cart-actions">
@@ -1273,10 +1274,49 @@ async function updateTableAfterEdit(tableNumber, orders) {
   const cleanedOrders = orders
     .map(order => {
       order.items = (order.items || []).filter(item => Number(item.quantity || 0) > 0);
+
       order.total = recalculateOrderTotal(order);
-      order.kitchenDone = false;
+
+      const hasKitchenItems =
+        (order.items || []).some(item => {
+          const category = String(item.category || "").toLowerCase();
+          const name = String(item.name || "").toLowerCase();
+
+          const hiddenCategories = [
+            "bevande",
+            "birre",
+            "vini",
+            "coperti"
+          ];
+
+          const drinkWords = [
+            "acqua",
+            "coca",
+            "fanta",
+            "sprite",
+            "chinotto",
+            "birra",
+            "vino",
+            "calice",
+            "lete",
+            "caffè",
+            "amaro",
+            "unicum"
+          ];
+
+          if (hiddenCategories.includes(category)) return false;
+          if (name.includes("coperto")) return false;
+
+          return !drinkWords.some(word => name.includes(word));
+        });
+
+      if (hasKitchenItems) {
+        order.kitchenDone = false;
+      }
+
       order.modifiedAt = new Date().toISOString();
       order.modifiedBy = loggedWaiter || "N/D";
+
       return order;
     })
     .filter(order => (order.items || []).length > 0);
