@@ -697,16 +697,27 @@ function removeItem(index) {
 function getExtrasText(item, itemIndex) {
   let html = "";
 
-if (item.removedIngredients && item.removedIngredients.length > 0) {
-  html += item.removedIngredients
-    .map((ingredient, ingredientIndex) => {
-      return `<br><em class="removed-ingredient">
-        ➖ senza ${ingredient.name}
-        <button onclick="removeRemovedIngredient(${itemIndex}, ${ingredientIndex})" style="padding:4px 6px;font-size:12px;">x</button>
-      </em>`;
-    })
-    .join("");
-}
+  if (item.extras && item.extras.length > 0) {
+    html += item.extras
+      .map((extra, extraIndex) => {
+        return `<br><em>
+          ➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
+          <button onclick="removeExtra(${itemIndex}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
+        </em>`;
+      })
+      .join("");
+  }
+
+  if (item.removedIngredients && item.removedIngredients.length > 0) {
+    html += item.removedIngredients
+      .map((ingredient, ingredientIndex) => {
+        return `<br><em class="removed-ingredient">
+          ➖ senza ${ingredient.name}
+          <button onclick="removeRemovedIngredient(${itemIndex}, ${ingredientIndex})" style="padding:4px 6px;font-size:12px;">x</button>
+        </em>`;
+      })
+      .join("");
+  }
 
   return html;
 }

@@ -99,7 +99,22 @@ function isHiddenItem(item) {
 
 function isFried(item) {
   const name = String(item.name || "").toLowerCase();
-  return FRIED_KEYWORDS.some(keyword => name.includes(keyword));
+
+  const excludedFriedItems = [
+    "provola e patate"
+  ];
+
+  if (
+    excludedFriedItems.some(excluded =>
+      name.includes(excluded)
+    )
+  ) {
+    return false;
+  }
+
+  return FRIED_KEYWORDS.some(keyword =>
+    name.includes(keyword)
+  );
 }
 
 function isDessert(item) {

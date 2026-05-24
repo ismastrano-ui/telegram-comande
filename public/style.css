@@ -1041,3 +1041,22 @@ body {
   background: #dc2626 !important;
   color: white !important;
 }
+.extra-option.selected {
+  background: #dcfce7 !important;
+  border-color: #22c55e !important;
+}
+
+.extra-option.removed {
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+}
+
+.extra-option.selected .extra-add-btn {
+  background: #22c55e !important;
+  color: white !important;
+}
+
+.extra-option.removed .extra-remove-btn {
+  background: #dc2626 !important;
+  color: white !important;
+}
