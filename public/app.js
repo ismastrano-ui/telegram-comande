@@ -935,9 +935,10 @@ async function loadOpenTables() {
 
       <div class="open-mini-actions">
         ${isTakeaway ? "" : `<button onclick="selectTable('${table.tableNumber}')">➕</button>`}
-        <button onclick="showTableHistory('${table.tableNumber}')">📜</button>
-        <button onclick="editTable('${table.tableNumber}')">✏️</button>
-        <button onclick="closeTable('${table.tableNumber}')">💰</button>
+${isTakeaway ? "" : `<button onclick="moveTable('${table.tableNumber}')">🔁</button>`}
+<button onclick="showTableHistory('${table.tableNumber}')">📜</button>
+<button onclick="editTable('${table.tableNumber}')">✏️</button>
+<button onclick="closeTable('${table.tableNumber}')">💰</button>
       </div>
     `;
 
@@ -953,6 +954,64 @@ function selectTable(tableNumber) {
   newOrderBtn.classList.remove("active");
 
   renderCart();
+}
+async function moveTable(oldTableNumber) {
+  const newTableNumber = prompt(
+    `Sposta tavolo ${oldTableNumber} al tavolo numero:`
+  );
+
+  if (!newTableNumber) return;
+
+  const cleanNewTable =
+    String(newTableNumber).trim();
+
+  if (!cleanNewTable) return;
+
+  if (cleanNewTable === String(oldTableNumber)) {
+    alert("Il tavolo di destinazione è uguale a quello attuale");
+    return;
+  }
+
+  const oldRef =
+    db.collection("tables").doc(String(oldTableNumber));
+
+  const newRef =
+    db.collection("tables").doc(cleanNewTable);
+
+  const oldDoc = await oldRef.get();
+  const newDoc = await newRef.get();
+
+  if (!oldDoc.exists) {
+    alert("Tavolo origine non trovato");
+    return;
+  }
+
+  if (newDoc.exists && newDoc.data().status === "open") {
+    alert("Il tavolo di destinazione è già aperto");
+    return;
+  }
+
+  const tableData = oldDoc.data();
+
+  const confirmMove = confirm(
+    `Confermi spostamento dal tavolo ${oldTableNumber} al tavolo ${cleanNewTable}?`
+  );
+
+  if (!confirmMove) return;
+
+  await newRef.set({
+    ...tableData,
+    tableNumber: cleanNewTable,
+    movedFrom: String(oldTableNumber),
+    movedAt: new Date().toISOString()
+  });
+
+  await oldRef.delete();
+
+  alert(`Tavolo ${oldTableNumber} spostato al tavolo ${cleanNewTable} ✅`);
+
+  loadOpenTables();
+  renderTableMap();
 }
 
 function buildTableSummary(tableNumber, table) {
