@@ -487,9 +487,14 @@ searchExtraInput.className = "extra-search-input";
 extrasList.appendChild(searchExtraInput);
 
   let selectedExtras = [];
+  let removedIngredients = [];
 
 function renderExtrasOptions(filter = "") {
-  const selectedNames = selectedExtras.map(e => e.name);
+  const selectedExtraNames =
+    selectedExtras.map(e => e.name);
+
+  const removedNames =
+    removedIngredients.map(e => e.name);
 
   extrasList
     .querySelectorAll(".extra-option")
@@ -503,8 +508,12 @@ function renderExtrasOptions(filter = "") {
       const div = document.createElement("div");
       div.className = "extra-option";
 
-      if (selectedNames.includes(extra.name)) {
+      if (selectedExtraNames.includes(extra.name)) {
         div.classList.add("selected");
+      }
+
+      if (removedNames.includes(extra.name)) {
+        div.classList.add("removed");
       }
 
       div.innerHTML = `
@@ -512,18 +521,54 @@ function renderExtrasOptions(filter = "") {
           <strong>${extra.name}</strong><br>
           <small>+ €${Number(extra.price || 0).toFixed(2)}</small>
         </div>
+
+        <div class="extra-choice-buttons">
+          <button type="button" class="extra-add-btn">
+            ➕
+          </button>
+
+          <button type="button" class="extra-remove-btn">
+            ➖
+          </button>
+        </div>
       `;
 
-      div.onclick = () => {
-        const selected = selectedExtras.find(e => e.name === extra.name);
+      div.querySelector(".extra-add-btn").onclick = event => {
+        event.stopPropagation();
+
+        removedIngredients =
+          removedIngredients.filter(e => e.name !== extra.name);
+
+        const selected =
+          selectedExtras.find(e => e.name === extra.name);
 
         if (selected) {
-          selectedExtras = selectedExtras.filter(e => e.name !== extra.name);
-          div.classList.remove("selected");
+          selectedExtras =
+            selectedExtras.filter(e => e.name !== extra.name);
         } else {
           selectedExtras.push(extra);
-          div.classList.add("selected");
         }
+
+        renderExtrasOptions(searchExtraInput.value);
+      };
+
+      div.querySelector(".extra-remove-btn").onclick = event => {
+        event.stopPropagation();
+
+        selectedExtras =
+          selectedExtras.filter(e => e.name !== extra.name);
+
+        const removed =
+          removedIngredients.find(e => e.name === extra.name);
+
+        if (removed) {
+          removedIngredients =
+            removedIngredients.filter(e => e.name !== extra.name);
+        } else {
+          removedIngredients.push(extra);
+        }
+
+        renderExtrasOptions(searchExtraInput.value);
       };
 
       extrasList.appendChild(div);
@@ -539,56 +584,73 @@ renderExtrasOptions();
     modal.classList.add("hidden");
   };
 
-  confirmButton.onclick = () => {
-    if (selectedExtras.length === 0) {
-      modal.classList.add("hidden");
-      return;
-    }
+confirmButton.onclick = () => {
+  if (
+    selectedExtras.length === 0 &&
+    removedIngredients.length === 0
+  ) {
+    modal.classList.add("hidden");
+    return;
+  }
 
-    const extraTotal = selectedExtras.reduce((sum, extra) => {
-      return sum + Number(extra.price || 0);
-    }, 0);
+  const extraTotal = selectedExtras.reduce((sum, extra) => {
+    return sum + Number(extra.price || 0);
+  }, 0);
 
-    const applyToAll =
-      Number(item.quantity || 1) <= 1
-        ? true
-        : confirm(`Applicare gli extra a tutte le ${item.quantity} pizze?`);
+  const removedToSave = removedIngredients.map(extra => ({
+    name: extra.name
+  }));
 
-    if (!applyToAll && Number(item.quantity || 1) > 1) {
-      item.quantity = Number(item.quantity || 1) - 1;
+  const applyToAll =
+    Number(item.quantity || 1) <= 1
+      ? true
+      : confirm(`Applicare modifiche a tutte le ${item.quantity} pizze?`);
 
-      const newItem = {
-        ...item,
-        quantity: 1,
-        price: Number(item.price || 0) + extraTotal,
-        extras: [
-          ...(item.extras || []),
-          ...selectedExtras.map(extra => ({
-            name: extra.name,
-            price: Number(extra.price || 0)
-          }))
-        ]
-      };
+  if (!applyToAll && Number(item.quantity || 1) > 1) {
+    item.quantity = Number(item.quantity || 1) - 1;
 
-      cart.splice(index + 1, 0, newItem);
-    } else {
-      if (!item.extras) item.extras = [];
-
-      selectedExtras.forEach(extra => {
-        item.extras.push({
+    const newItem = {
+      ...item,
+      quantity: 1,
+      price: Number(item.price || 0) + extraTotal,
+      extras: [
+        ...(item.extras || []),
+        ...selectedExtras.map(extra => ({
           name: extra.name,
           price: Number(extra.price || 0)
-        });
+        }))
+      ],
+      removedIngredients: [
+        ...(item.removedIngredients || []),
+        ...removedToSave
+      ]
+    };
+
+    cart.splice(index + 1, 0, newItem);
+  } else {
+    if (!item.extras) item.extras = [];
+    if (!item.removedIngredients) item.removedIngredients = [];
+
+    selectedExtras.forEach(extra => {
+      item.extras.push({
+        name: extra.name,
+        price: Number(extra.price || 0)
       });
+    });
 
-      item.price = Number(item.price || 0) + extraTotal;
-    }
+    removedToSave.forEach(extra => {
+      item.removedIngredients.push({
+        name: extra.name
+      });
+    });
 
-    modal.classList.add("hidden");
-    renderCart();
-  };
+    item.price = Number(item.price || 0) + extraTotal;
+  }
+
+  modal.classList.add("hidden");
+  renderCart();
+};
 }
-
 function removeExtra(itemIndex, extraIndex) {
   const item = cart[itemIndex];
 
@@ -618,15 +680,27 @@ function removeItem(index) {
 }
 
 function getExtrasText(item, itemIndex) {
-  if (!item.extras || item.extras.length === 0) return "";
+  let html = "";
 
-  return item.extras
-    .map((extra, extraIndex) => {
-      return `<br><em>➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
-        <button onclick="removeExtra(${itemIndex}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
-      </em>`;
-    })
-    .join("");
+  if (item.extras && item.extras.length > 0) {
+    html += item.extras
+      .map((extra, extraIndex) => {
+        return `<br><em>➕ ${extra.name} €${Number(extra.price || 0).toFixed(2)}
+          <button onclick="removeExtra(${itemIndex}, ${extraIndex})" style="padding:4px 6px;font-size:12px;">x</button>
+        </em>`;
+      })
+      .join("");
+  }
+
+  if (item.removedIngredients && item.removedIngredients.length > 0) {
+    html += item.removedIngredients
+      .map(ingredient => {
+        return `<br><em class="removed-ingredient">➖ senza ${ingredient.name}</em>`;
+      })
+      .join("");
+  }
+
+  return html;
 }
 
 function buildCombinedModification(item) {
@@ -637,6 +711,14 @@ function buildCombinedModification(item) {
       parts.push(`+ ${extra.name} €${Number(extra.price || 0).toFixed(2)}`);
     });
   }
+  if (
+  item.removedIngredients &&
+  item.removedIngredients.length > 0
+) {
+  item.removedIngredients.forEach(ingredient => {
+    parts.push(`- senza ${ingredient.name}`);
+  });
+}
 
   if (item.modification) {
     const cleanNote = String(item.modification)
