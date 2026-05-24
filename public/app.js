@@ -1284,45 +1284,53 @@ async function updateTableAfterEdit(tableNumber, orders) {
 
   const cleanedOrders = orders
     .map(order => {
-      order.items = (order.items || []).filter(item => Number(item.quantity || 0) > 0);
+      const wasKitchenDone = order.kitchenDone === true;
+
+      order.items = (order.items || []).filter(
+        item => Number(item.quantity || 0) > 0
+      );
 
       order.total = recalculateOrderTotal(order);
 
-      const hasKitchenItems =
-        (order.items || []).some(item => {
-          const category = String(item.category || "").toLowerCase();
-          const name = String(item.name || "").toLowerCase();
+      if (!wasKitchenDone) {
+        const hasKitchenItems =
+          (order.items || []).some(item => {
+            const category = String(item.category || "").toLowerCase();
+            const name = String(item.name || "").toLowerCase();
 
-          const hiddenCategories = [
-            "bevande",
-            "birre",
-            "vini",
-            "coperti"
-          ];
+            const hiddenCategories = [
+              "bevande",
+              "birre",
+              "vini",
+              "coperti"
+            ];
 
-          const drinkWords = [
-            "acqua",
-            "coca",
-            "fanta",
-            "sprite",
-            "chinotto",
-            "birra",
-            "vino",
-            "calice",
-            "lete",
-            "caffè",
-            "amaro",
-            "unicum"
-          ];
+            const drinkWords = [
+              "acqua",
+              "coca",
+              "fanta",
+              "sprite",
+              "chinotto",
+              "birra",
+              "vino",
+              "calice",
+              "lete",
+              "caffè",
+              "amaro",
+              "unicum"
+            ];
 
-          if (hiddenCategories.includes(category)) return false;
-          if (name.includes("coperto")) return false;
+            if (hiddenCategories.includes(category)) return false;
+            if (name.includes("coperto")) return false;
 
-          return !drinkWords.some(word => name.includes(word));
-        });
+            return !drinkWords.some(word => name.includes(word));
+          });
 
-      if (hasKitchenItems) {
-        order.kitchenDone = false;
+        if (hasKitchenItems) {
+          order.kitchenDone = false;
+        }
+      } else {
+        order.kitchenDone = true;
       }
 
       order.modifiedAt = new Date().toISOString();
